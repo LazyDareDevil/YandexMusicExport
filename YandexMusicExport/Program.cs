@@ -74,8 +74,6 @@ internal static class Program
             string playlistUuIdPart = uriParts[4];
             string kinds = "";
 
-            HttpClient client = new();
-
             if (uriParts.Length > 6)
             {
                 owner = uriParts[6];
@@ -85,15 +83,20 @@ internal static class Program
             if (playlistUuIdPart.Length > 3 
                 && playlistUuIdPart.StartsWith("lk."))
             {
+                // Если UUID плейлиста начинается с данной приставки, то ее нужно отрезать, чтобы проверить, что GUID валидный
                 playlistUuid = playlistUuIdPart[3..];
             }
-
+            
+            HttpClient client = new();
             if (Guid.TryParse(playlistUuid, out Guid parsedGuid))
             {
+                // В ответ придет полный HTML страницы, там же содержится информация о плейлисте - 
+                // USER_ID и PLAYLIST_ID
                 HttpResponseMessage playlistHtml = client.Send(new HttpRequestMessage(HttpMethod.Get, uriRaw));
                 Task<string> readTask = playlistHtml.Content.ReadAsStringAsync();
                 readTask.Wait();
-                Regex playlistDataReg = new("\"uuid\":\"" + playlistUuIdPart + "\".+\"uid\":(?<useruid>[0-9]+).+\"kind\":(?<playlistkind2>[0-9]+)");
+                // понять, как сделать проверку без привязки порядка userid - playlistkind
+                Regex playlistDataReg = new("\"uuid\":\"" + playlistUuIdPart + "\".+\"uid\":(?<useruid>[0-9]+).+\"kind\":(?<playlistkind>[0-9]+)");
                 string data = readTask.Result;
                 data = data.Replace("\n", "");
                 data = data.Replace("\t", "");
@@ -105,7 +108,7 @@ internal static class Program
                         owner = group.Value;
                     }
 
-                    if (match.Groups.TryGetValue("playlistkind2", out Group? group2))
+                    if (match.Groups.TryGetValue("playlistkind", out Group? group2))
                     {
                         kinds = group2.Value;
                     }
@@ -117,7 +120,9 @@ internal static class Program
 
             // Отправка запроса по URL-адресу и получение ответа в формате JSON
             HttpResponseMessage response = client.Send(new HttpRequestMessage(HttpMethod.Get, uri));
-            Task<PlaylistResponse?> responseDataTask = response.Content.ReadFromJsonAsync<PlaylistResponse>(new JsonSerializerOptions()
+            // Добавлен энкодинг на все, чтобы не было проблем с символами
+            Task<PlaylistResponse?> responseDataTask = 
+                response.Content.ReadFromJsonAsync<PlaylistResponse>(new JsonSerializerOptions()
             {
                 PropertyNameCaseInsensitive = true,
                 Encoder = JavaScriptEncoder.Create(UnicodeRanges.All)
@@ -128,7 +133,7 @@ internal static class Program
                 responseData is null ||
                 string.IsNullOrEmpty(responseData.Result.PlaylistUuid))
             {
-                CannonAcessDataError(responseDataTask.Exception);
+                CannotAccessDataError(responseDataTask.Exception);
                 Console.ReadLine();
                 return;
             }
@@ -142,14 +147,15 @@ internal static class Program
             {
                 case ExportType.Json:
                     outputFilePath = $"{outputFileName}.json";
-                    SerializablePlaylist jsonplaylist = CreateSerilzableProject(responseData.Result);
+                    SerializablePlaylist jsonPlaylist = CreateSerializableProject(responseData.Result);
                     using (FileStream fs = new (outputFilePath, new FileStreamOptions()
                     {
                         Mode = FileMode.OpenOrCreate,
                         Access = FileAccess.ReadWrite,
                     }))
                     {
-                        JsonSerializer.Serialize(fs, jsonplaylist, new JsonSerializerOptions()
+                        // Добавлен энкодинг на все, чтобы не было проблем с символами
+                        JsonSerializer.Serialize(fs, jsonPlaylist, new JsonSerializerOptions()
                         {
                             PropertyNameCaseInsensitive = false,
                             WriteIndented = true,
@@ -159,14 +165,14 @@ internal static class Program
                     break;
                 case ExportType.Xml:
                     outputFilePath = $"{outputFileName}.xml";
-                    SerializablePlaylist xmlplaylist = CreateSerilzableProject(responseData.Result);
+                    SerializablePlaylist xmlPlaylist = CreateSerializableProject(responseData.Result);
                     using (StreamWriter fs = new(outputFilePath, new FileStreamOptions()
                     {
                         Mode = FileMode.OpenOrCreate,
                         Access = FileAccess.ReadWrite,
                     }))
                     {
-                        SerializeXml(fs, xmlplaylist);
+                        SerializeXml(fs, xmlPlaylist);
                     }
                      
                     break;
@@ -196,7 +202,7 @@ internal static class Program
         }
         catch (JsonException e)
         {
-            CannonAcessDataError(e);
+            CannotAccessDataError(e);
         }
 
         catch (IndexOutOfRangeException e)
@@ -227,7 +233,7 @@ internal static class Program
         Console.ReadKey();
     }
 
-    private static void CannonAcessDataError(Exception? ex)
+    private static void CannotAccessDataError(Exception? ex)
     {
         Console.ForegroundColor = ConsoleColor.Red;
         Console.WriteLine("Ошибка! Несуществующий плейлист или временный бан от Яндекса. Проверьте ссылку " +
@@ -241,7 +247,7 @@ internal static class Program
         Console.WriteLine(ex);
     }
 
-    private static SerializablePlaylist CreateSerilzableProject(PlaylistResult playlist)
+    private static SerializablePlaylist CreateSerializableProject(PlaylistResult playlist)
         => new()
         {
             Title = playlist.Title,

@@ -1,7 +1,8 @@
-import requests
-import json
-import time
-import re
+import requests 
+import json 
+import time 
+import re 
+import uuid
 from datetime import datetime
 
 def print_error(e):
@@ -12,7 +13,9 @@ def send_welcome():
           "Программа позволяет экспортировать любой плейлист Яндекс Музыки в текстовое " +
           "представление ИМЯ ИСПОЛНИТЕЛЯ - НАЗВАНИЕ ТРЕКА.\n\n" +
           "1. Скопируйте и вставьте ниже ссылку на плейлист. Обязательно проверьте, чтобы она была " +
-          "вида https://music.yandex.ru/users/USERNAME/playlists/PLAYLIST_ID. <b><i>Также убедитесь, что плейлист ❗️не приватный❗️</i></b>\n" +
+          "вида https://music.yandex.ru/users/USERNAME/playlists/PLAYLIST_ID." +
+          " или вида https://music.yandex.ru/playlists/lk.PLAYLIST_UUID или https://music.yandex.ru/playlists/PLAYLIST_UUID (данный вид в тестовом режиме)\n" +
+          "<b><i>Также убедитесь, что плейлист ❗️не приватный❗️</i></b>\n" +
           "2. Если плейлист большой, может потребоваться некоторое время для обработки.\n" +
           "3. Если ссылка корректная, но возникает ошибка, то, вероятно, сработал 'бан' со " +
           "стороны Яндекса. В таком случае попробуйте еще раз через некоторое время или на " +
@@ -26,11 +29,36 @@ def handle_message(uri_raw):
         uri_parts = re.split('/|\?', uri_raw)
 
         owner = uri_parts[4]
+        playlist_uuid_part = uri_parts[4]
         kinds = ""
 
         if len(uri_parts) > 6:
             kinds = uri_parts[6]
 
+        playlist_uuid = playlist_uuid_part
+        if (playlist_uuid_part.startswith('lk.')) :
+            playlist_uuid = playlist_uuid[3,-1]
+            
+        is_parsed = False
+        try:
+            uuid.UUID(playlist_uuid)
+            is_parsed = True
+        except ValueError:
+            is_parsed = False
+
+        if (is_parsed):
+            responseHtml = requests.get(uri_raw)
+            responseHtml.raise_for_status()
+            data = responseHtml.content.decode(responseHtml.encoding)
+            match = re.match("\"uuid\":\"" +  playlist_uuid_part + "\".+\"uid\":(?  <useruid>[0-9]+).+\"kind\":(?P<playlistkind>[0-9]+)")
+            if (match):
+                try:
+                    owner = match.group('useruid')
+                    kinds = match.group('playlistkind')
+                except:
+                    is_parsed = False
+                    
+        
         uri = f'https://api.music.yandex.net/users/{owner}/playlists/{kinds}'
 
         response = requests.get(uri)
