@@ -1,6 +1,7 @@
 import requests
 import json
 import time
+import re
 from datetime import datetime
 
 def print_error(e):
@@ -22,27 +23,33 @@ def send_welcome():
 def handle_message(uri_raw):
     try:
         uri_raw = uri_raw.strip()
-        uri_parts = uri_raw.split('?')[0].split('/')
+        uri_parts = re.split('/|\?', uri_raw)
 
         owner = uri_parts[4]
-        kinds = uri_parts[6]
+        kinds = ""
 
-        uri = f"https://music.yandex.ru/handlers/playlist.jsx?owner={owner}&kinds={kinds}"
+        if len(uri_parts) > 6:
+            kinds = uri_parts[6]
+
+        uri = f'https://api.music.yandex.net/users/{owner}/playlists/{kinds}'
+
         response = requests.get(uri)
         response.raise_for_status()
 
-        data = response.json()
-        playlist_title = data['playlist']['title']
-        tracks = data['playlist']['tracks']
+        data = response.json()['result']
+        
+        playlist_title = data['title']
+        tracks = data['tracks']
 
-        all_file = ""
+        all_file = f"{playlist_title}\n"
 
         for track in tracks:
-            artists_names = ", ".join(artist['name'] for artist in track['artists'])
-            full_track = f"{artists_names} - {track['title']}\n"
+            artists_names = ", ".join(artist['name'] for artist in track['track']['artists'])
+            full_track = f"{artists_names} - {track['track']['title']}\n"
             all_file += full_track
 
-        filename = f"{playlist_title}.txt"
+        today_text = datetime.now().strftime("%Y-%m-%d")
+        filename = f"{playlist_title}_{today_text}.txt"
         with open(filename, 'w', encoding='utf-8') as f:
             f.write(all_file)
 
