@@ -3,17 +3,31 @@ using System.Net.Http.Json;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
-using System.Text.RegularExpressions;
 using System.Text.Unicode;
 using System.Xml;
 using System.Xml.Serialization;
+using YandexMusicExport.Serialization;
+using YandexMusicExport.Serialization.Enum;
+using YandexMusicExport.Serialization.Models;
+using YandexMusicExport.YandexMusicApi;
+using YandexMusicExport.YandexMusicApi.Contracts;
 
 namespace YandexMusicExport;
 
 internal static class Program
 {
-    private static void Main()
+    private static readonly Encoding _dataEncdoding = Encoding.Unicode;
+    private static readonly JsonSerializerOptions _jsonOptions = new()
     {
+        PropertyNameCaseInsensitive = false,
+        WriteIndented = true,
+        Encoder = JavaScriptEncoder.Create(UnicodeRanges.All),
+    };
+
+    private static void Main(string[] args)
+    {
+        string directory = AppContext.BaseDirectory;
+
         try
         {
             Console.ForegroundColor = ConsoleColor.White;
@@ -69,67 +83,32 @@ internal static class Program
             // Разделение исходного URL-адреса по символу "/"
             string[] uriParts = uriRaw.Split('/', '?');
 
-            // Извлечение имени владельца и типа плейлиста из списка uriRaw
-            string owner = uriParts[4];
-            string playlistUuIdPart = uriParts[4];
-            string kinds = "";
-
-            if (uriParts.Length > 6)
-            {
-                owner = uriParts[6];
-            }
-
-            string playlistUuid = playlistUuIdPart;
-            if (playlistUuIdPart.Length > 3 
-                && playlistUuIdPart.StartsWith("lk."))
-            {
-                // Если UUID плейлиста начинается с данной приставки, то ее нужно отрезать, чтобы проверить, что GUID валидный
-                playlistUuid = playlistUuIdPart[3..];
-            }
-            
             HttpClient client = new();
-            if (Guid.TryParse(playlistUuid, out Guid parsedGuid))
+            bool correct = YMPlaylistPathService.TryParseApiStylePath(uriParts, out int userId, out int playlistId);
+            if (!correct)
             {
-                // В ответ придет полный HTML страницы, там же содержится информация о плейлисте - 
-                // USER_ID и PLAYLIST_ID
-                HttpResponseMessage playlistHtml = client.Send(new HttpRequestMessage(HttpMethod.Get, uriRaw));
-                Task<string> readTask = playlistHtml.Content.ReadAsStringAsync();
-                readTask.Wait();
-                // понять, как сделать проверку без привязки порядка userid - playlistkind
-                Regex playlistDataReg = new("\"uuid\":\"" + playlistUuIdPart + "\".+\"uid\":(?<useruid>[0-9]+).+\"kind\":(?<playlistkind>[0-9]+)");
-                string data = readTask.Result;
-                data = data.Replace("\n", "");
-                data = data.Replace("\t", "");
-                data = data.Replace(" ", "");
-                foreach (Match match in playlistDataReg.Matches(data))
+                if (YMPlaylistPathService.TryParseWebAppStylePath(uriParts, out string? playlistUuid))
                 {
-                    if (match.Groups.TryGetValue("useruid", out Group? group))
-                    {
-                        owner = group.Value;
-                    }
-
-                    if (match.Groups.TryGetValue("playlistkind", out Group? group2))
-                    {
-                        kinds = group2.Value;
-                    }
+                    correct = YMPlaylistPublicApiService.TryGetPlaylistApiDataFromWebAppData(client, uriRaw, playlistUuid, out userId, out playlistId);
                 }
             }
 
+            if (!correct)
+            {
+                return;
+            }
+
             // Формирование URL-адреса для запроса к серверу Яндекс Музыки
-            string uri = $"https://api.music.yandex.net/users/{owner}/playlists/{kinds}";
+            string uri = $"https://api.music.yandex.net/users/{userId}/playlists/{playlistId}";
 
             // Отправка запроса по URL-адресу и получение ответа в формате JSON
             HttpResponseMessage response = client.Send(new HttpRequestMessage(HttpMethod.Get, uri));
             // Добавлен энкодинг на все, чтобы не было проблем с символами
-            Task<PlaylistResponse?> responseDataTask = 
-                response.Content.ReadFromJsonAsync<PlaylistResponse>(new JsonSerializerOptions()
-            {
-                PropertyNameCaseInsensitive = true,
-                Encoder = JavaScriptEncoder.Create(UnicodeRanges.All)
-            });
+            Task<PlaylistResponse?> responseDataTask =
+                response.Content.ReadFromJsonAsync<PlaylistResponse>(_jsonOptions);
             responseDataTask.Wait();
             PlaylistResponse? responseData = responseDataTask.Result;
-            if (responseDataTask.Exception is not null || 
+            if (responseDataTask.Exception is not null ||
                 responseData is null ||
                 string.IsNullOrEmpty(responseData.Result.PlaylistUuid))
             {
@@ -138,59 +117,35 @@ internal static class Program
                 return;
             }
 
+            string playlisPublicLink = YMPlaylistPathService.GetPlaylistPublicLink(responseData.Result.PlaylistUuid);
             string playlistTitle = responseData.Result.Title;
             string outputFileName = $"{playlistTitle}_{DateTime.Now:yyyy-MM-dd}";
-            string outputFilePath;
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine($"Название плейлиста: {playlistTitle}");
-            switch (export)
+            string outputFilePath = string.Empty;
+            if (export == ExportType.PlainText)
             {
-                case ExportType.Json:
-                    outputFilePath = $"{outputFileName}.json";
-                    SerializablePlaylist jsonPlaylist = CreateSerializableProject(responseData.Result);
-                    using (FileStream fs = new (outputFilePath, new FileStreamOptions()
-                    {
-                        Mode = FileMode.OpenOrCreate,
-                        Access = FileAccess.ReadWrite,
-                    }))
-                    {
-                        // Добавлен энкодинг на все, чтобы не было проблем с символами
-                        JsonSerializer.Serialize(fs, jsonPlaylist, new JsonSerializerOptions()
-                        {
-                            PropertyNameCaseInsensitive = false,
-                            WriteIndented = true,
-                            Encoder = JavaScriptEncoder.Create(UnicodeRanges.All),
-                        });
-                    }
-                    break;
-                case ExportType.Xml:
-                    outputFilePath = $"{outputFileName}.xml";
-                    SerializablePlaylist xmlPlaylist = CreateSerializableProject(responseData.Result);
-                    using (StreamWriter fs = new(outputFilePath, new FileStreamOptions()
-                    {
-                        Mode = FileMode.OpenOrCreate,
-                        Access = FileAccess.ReadWrite,
-                    }))
-                    {
-                        SerializeXml(fs, xmlPlaylist);
-                    }
-                     
-                    break;
-                default:
-                    outputFilePath = $"{outputFileName}.txt";
-                    Console.WriteLine("Список треков:");
-                    using (StreamWriter textFile = new(outputFilePath))
-                    {
-                        textFile.WriteLine(GetPlaylistPublicLink(responseData.Result));
-                        foreach (Track track in responseData.Result.Tracks.Select(t => t.Track))
-                        {
-                            string line = string.Format("{0} - {1}", string.Join(", ", track.Artists.Select(a => a.Name)).TrimEnd(',', ' '), track.Title);
-                            Console.WriteLine("\t" + line);
-                            textFile.WriteLine(line);
-                        }
-                    }
+                outputFileName = DefaultFileExport(outputFileName, directory, responseData);
+            }
+            else
+            {
+                SerializablePlaylist playlist = ModelMappingService.CreateSerilzableProject(responseData.Result);
+                playlist.PlaylistPublicLink = playlisPublicLink;
+                if (export == ExportType.Json)
+                {
+                    outputFilePath = JsonFileExport(outputFileName, directory, playlist);
+                }
 
-                    break;
+                if (export == ExportType.Xml)
+                {
+                    outputFilePath = XmlFileExport(outputFileName, directory, playlist);
+                }
+            }
+
+            if (string.IsNullOrEmpty(outputFilePath))
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("Ошибка! Выбран некорректный тип сохранения плейлиста!");
+                Console.ResetColor();
+                return;
             }
 
             // Вывод информации
@@ -214,7 +169,7 @@ internal static class Program
             Console.WriteLine("\nДополнительная информация:");
             Console.WriteLine(e);
         }
-        
+
         catch (Exception e)
         {
             Console.ForegroundColor = ConsoleColor.Red;
@@ -226,9 +181,9 @@ internal static class Program
             Console.ResetColor();
             Console.WriteLine("\nДополнительная информация:");
             Console.WriteLine(e);
-            
+
         }
-        
+
         Console.WriteLine("\nДля закрытия нажмите любую клавишу...");
         Console.ReadKey();
     }
@@ -247,25 +202,46 @@ internal static class Program
         Console.WriteLine(ex);
     }
 
-    private static SerializablePlaylist CreateSerializableProject(PlaylistResult playlist)
-        => new()
+    private static string DefaultFileExport(string outputFileName, string directory, PlaylistResponse responseData)
+    {
+        string outputFilePath = Path.Combine(directory, $"{outputFileName}.txt");
+        Console.WriteLine("Список треков:");
+        using (StreamWriter textFile = new(outputFilePath))
         {
-            Title = playlist.Title,
-            TrackCount = playlist.TrackCount,
-            PlaylistPublicLink = GetPlaylistPublicLink(playlist),
-            Tracks = [.. playlist.Tracks.Select(t => t.Track).Select( t => new SerializableTrack(){
-                Title = t.Title,
-                Artists = [..t.Artists.Select(a => a.Name)],
-                Albums = [..t.Albums.Select(a => new SerializableAlbum(){
-                    Title = a.Title,
-                    Year = a.Year,
-                    TrackCount = a.TrackCount,
-                    Artists = [..a.Artists.Select(a => a.Name)],
-                })]
-            })]
-        };
+            foreach (Track track in responseData.Result.Tracks.Select(t => t.Track))
+            {
+                string line = string.Format("{0} - {1}", string.Join(", ", track.Artists.Select(a => a.Name)).TrimEnd(',', ' '), track.Title);
+                Console.WriteLine("\t" + line);
+                textFile.WriteLine(line);
+            }
+        }
 
-    private static string GetPlaylistPublicLink(PlaylistResult playlist) => $"https://music.yandex.ru/playlists/{playlist.PlaylistUuid}";
+        return outputFilePath;
+    }
+
+    private static string JsonFileExport(string outputFileName, string directory, SerializablePlaylist playlist)
+    {
+        string outputFilePath = Path.Combine(directory, $"{outputFileName}.json");
+        using FileStream fs = new(outputFilePath, new FileStreamOptions()
+        {
+            Mode = FileMode.OpenOrCreate,
+            Access = FileAccess.Write,
+        });
+        JsonSerializer.Serialize(fs, playlist, _jsonOptions);
+        return outputFilePath;
+    }
+
+    private static string XmlFileExport(string outputFileName, string directory, SerializablePlaylist playlist)
+    {
+        string outputFilePath = Path.Combine(directory, $"{outputFileName}.xml");
+        using StreamWriter fs = new(outputFilePath, new FileStreamOptions()
+        {
+            Mode = FileMode.OpenOrCreate,
+            Access = FileAccess.Write,
+        });
+        SerializeXml(fs, playlist);
+        return outputFilePath;
+    }
 
     private static void SerializeXml<T>(StreamWriter stream, T data)
         where T : class
@@ -276,112 +252,10 @@ internal static class Program
         {
             Indent = true,
             OmitXmlDeclaration = true,
-            Encoding = Encoding.UTF8
+            Encoding = _dataEncdoding
         };
-        
+
         using XmlWriter writer = XmlWriter.Create(stream, settings);
         xmlSerializer.Serialize(writer, data, emptyNamespaces);
     }
-}
-
-enum ExportType
-{
-    PlainText = 1,
-    Json = 2,
-    Xml = 3
-}
-
-[Serializable]
-public class PlaylistResponse
-{
-    public PlaylistResult Result { get; set; } = new();
-}
-
-[Serializable]
-public class PlaylistResult
-{
-    public string PlaylistUuid { get; set; } = string.Empty;
-
-    public string Title { get; set; } = string.Empty;
-
-    public int TrackCount { get; set; } = 0;
-
-    public TrackResult[] Tracks { get; set; } = [];
-}
-
-[Serializable]
-public class TrackResult
-{
-    public Track Track { get; set; } = new();
-}
-
-[Serializable]
-public class Track
-{
-    public string Title { get; set; } = string.Empty;
-
-    public Artist[] Artists { get; set; } = [];
-
-    public Album[] Albums { get; set; } = [];
-}
-
-[Serializable]
-public class Artist
-{
-    public string Name { get; set; } = string.Empty;
-}
-
-[Serializable]
-public class Album 
-{
-    public string Title { get; set; } = string.Empty;
-
-    public int Year { get; set; }
-
-    public int TrackCount { get; set; } = 0;
-
-    public Artist[] Artists { get; set; } = [];
-}
-
-[Serializable]
-[XmlRoot("Playlist")]
-public class SerializablePlaylist
-{
-    [XmlAttribute]
-    public string PlaylistPublicLink { get; set; } = string.Empty;
-    
-    public string Title { get; set; } = string.Empty;
-
-    [XmlAttribute]
-    public int TrackCount { get; set; } = 0;
-
-    [XmlArrayItem("Track")]
-    public SerializableTrack[] Tracks { get; set; } = [];
-}
-
-[XmlRoot("Track")]
-public class SerializableTrack
-{
-    public string Title { get; set; } = string.Empty;
-
-    [XmlArrayItem("Artist")]
-    public string[] Artists { get; set; } = [];
-
-    [XmlArrayItem("Album")]
-    public SerializableAlbum[] Albums { get; set; } = [];
-}
-
-[XmlRoot("Album")]
-public class SerializableAlbum
-{
-    public string Title { get; set; } = string.Empty;
-
-    [XmlAttribute]
-    public int Year { get; set; }
-
-    [XmlAttribute]
-    public int TrackCount { get; set; } = 0;
-
-    [XmlArrayItem("Artist")]
-    public string[] Artists { get; set; } = [];
 }
