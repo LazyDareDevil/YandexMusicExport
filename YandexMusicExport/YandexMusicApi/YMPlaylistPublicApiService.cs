@@ -8,11 +8,21 @@ namespace YandexMusicExport.YandexMusicApi;
 
 public static class YMPlaylistPublicApiService
 {
-    public static string GetPlaylistDataRequestLink(int userId, int playlistId)
-        => $"https://api.music.yandex.net/users/{userId}/playlists/{playlistId}";
+    public static bool TryParsePlaylistApiData(this HttpClient client, string link, out int userId, out int playlistId)
+    {
+        // Разделение исходного URL-адреса по символу "/"
+        string[] uriParts = link.Split('/', '?');
+        bool correct = YMPlaylistPathService.TryParseApiStylePath(uriParts, out userId, out playlistId);
+        if (!correct)
+        {
+            if (YMPlaylistPathService.TryParseWebAppStylePath(uriParts, out string? playlistUuid))
+            {
+                return TryGetPlaylistApiDataFromWebAppData(client, link, playlistUuid, out userId, out playlistId);
+            }
+        }
 
-    public static string GetPlaylistWebLink(string playlistUuid)
-        => $"https://music.yandex.ru/playlists/{playlistUuid}";
+        return correct;
+    }
 
     public static bool TryGetCoverPathLink(string coverUrl, [MaybeNullWhen(false)] out string link)
     {
@@ -27,7 +37,7 @@ public static class YMPlaylistPublicApiService
         return true;
     }
 
-    public static bool TryGetPlaylistApiDataFromWebAppData(this HttpClient client,
+    private static bool TryGetPlaylistApiDataFromWebAppData(this HttpClient client,
                                                            string playlistLink,
                                                            string playlistUuid,
                                                            [MaybeNullWhen(false)] out int userId,
@@ -59,9 +69,20 @@ public static class YMPlaylistPublicApiService
         return userFound && playlistFound;
     }
 
-    public static async Task<PlaylistResponse?> GetPlaylist(this HttpClient client, string apiLink, JsonSerializerOptions? options = null)
+    public static async Task<PlaylistResponse?> TryGetPlayliistData(this HttpClient client, int userId, int playlistId, JsonSerializerOptions? options = null)
     {
-        HttpResponseMessage response = client.Send(new HttpRequestMessage(HttpMethod.Get, apiLink));
-        return await response.Content.ReadFromJsonAsync<PlaylistResponse>(options);
+        // Формирование URL-адреса для запроса к серверу Яндекс Музыки
+        string uri = YMPlaylistPathService.GetPlaylistDataRequestLink(userId, playlistId);
+        try
+        {
+            // Отправка запроса по URL-адресу и получение ответа в формате JSON
+            HttpResponseMessage response = client.Send(new HttpRequestMessage(HttpMethod.Get, uri));
+            // Добавлен энкодинг на все, чтобы не было проблем с символами
+            return await response.Content.ReadFromJsonAsync<PlaylistResponse>(options);
+        }
+        catch
+        {
+            return null;
+        }
     }
 }

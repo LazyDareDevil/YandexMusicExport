@@ -1,4 +1,5 @@
 ﻿using YandexMusicExport.Serialization.Models;
+using YandexMusicExport.YandexMusicApi;
 using YandexMusicExport.YandexMusicApi.Contracts;
 
 namespace YandexMusicExport.Serialization;
@@ -9,6 +10,7 @@ public static class ModelMappingService
         => new()
         {
             Title = playlist.Title,
+            PlaylistPublicLink = YMPlaylistPathService.GetPlaylistPublicLink(playlist.PlaylistUuid),
             TrackCount = playlist.TrackCount,
             Tracks = [.. playlist.Tracks.Select(t => t.Track).Select( t => new SerializableTrack(){
                 Title = t.Title,

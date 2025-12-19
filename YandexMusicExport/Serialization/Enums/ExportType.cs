@@ -1,6 +1,6 @@
-﻿namespace YandexMusicExport.Serialization.Enum;
+﻿namespace YandexMusicExport.Serialization.Enums;
 
-enum ExportType
+public enum ExportType
 {
     PlainText = 1,
     Json = 2,

@@ -7,16 +7,22 @@ namespace YandexMusicExport.Serialization;
 
 public static class XmlSerialization
 {
-    public static string XmlFileExport(string outputFileName, string directory, SerializablePlaylist playlist, Encoding encoding)
+    public static bool TryXmlFileExport(string outputFilePath, SerializablePlaylist playlist, Encoding encoding)
     {
-        string outputFilePath = Path.Combine(directory, $"{outputFileName}.xml");
-        using StreamWriter fs = new(outputFilePath, new FileStreamOptions()
+        try
         {
-            Mode = FileMode.OpenOrCreate,
-            Access = FileAccess.Write,
-        });
-        SerializeXml(fs, playlist, encoding);
-        return outputFilePath;
+            using StreamWriter fs = new(outputFilePath, new FileStreamOptions()
+            {
+                Mode = FileMode.OpenOrCreate,
+                Access = FileAccess.Write,
+            });
+            SerializeXml(fs, playlist, encoding);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     public static void SerializeXml<T>(StreamWriter stream, T data, Encoding encoding)

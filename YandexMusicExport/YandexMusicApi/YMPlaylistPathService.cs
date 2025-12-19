@@ -1,10 +1,8 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using YandexMusicExport.Serialization.Models;
-using YandexMusicExport.YandexMusicApi.Contracts;
 
 namespace YandexMusicExport.YandexMusicApi;
 
-internal static class YMPlaylistPathService
+public static class YMPlaylistPathService
 {
     // api playlist url style : https://api.music.yandex.net/users/user-id/playlists/playlist-id";
     //uriParts[0] == "https:";
@@ -14,7 +12,7 @@ internal static class YMPlaylistPathService
     //uriParts[4] == "{user-id}"
     //uriParts[5] == "playlists"
     //uriParts[6] == "{playlist-id}"
-    public static bool TryParseApiStylePath(string[] pathParts, [MaybeNullWhen(false)] out int userId, [MaybeNullWhen(false)] out int playlistId)
+    internal static bool TryParseApiStylePath(string[] pathParts, [MaybeNullWhen(false)] out int userId, [MaybeNullWhen(false)] out int playlistId)
     {
         userId = -1;
         playlistId = -1;
@@ -31,7 +29,7 @@ internal static class YMPlaylistPathService
     //uriParts[2] == "music.yandex.ru";
     //uriParts[3] == "playlists";
     //uriParts[4] == "lk.{some-guid}"; OR uriParts[4] = "{some-guid}";
-    public static bool TryParseWebAppStylePath(string[] urlParts, [MaybeNullWhen(false)] out string playlistId)
+    internal static bool TryParseWebAppStylePath(string[] urlParts, [MaybeNullWhen(false)] out string playlistId)
     {
         playlistId = null;
         if (urlParts.Length < 5
@@ -56,5 +54,9 @@ internal static class YMPlaylistPathService
         return Guid.TryParse(id, out _);
     }
 
-    public static string GetPlaylistPublicLink(string playlistUuid) => $"https://music.yandex.ru/playlists/{playlistUuid}";
+    internal static string GetPlaylistDataRequestLink(int userId, int playlistId)
+        => $"https://api.music.yandex.net/users/{userId}/playlists/{playlistId}";
+
+    public static string GetPlaylistPublicLink(string playlistUuid) 
+        => $"https://music.yandex.ru/playlists/{playlistUuid}";
 }
