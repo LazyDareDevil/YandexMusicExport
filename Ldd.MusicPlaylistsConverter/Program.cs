@@ -101,6 +101,7 @@ internal static class Program
         PlaylistResponse? responseData = responseDataTask.Result;
         string outputFilePath = string.Empty;
         bool serialized = false;
+        SerializablePlaylist? playlist = null;
         Console.ForegroundColor = ConsoleColor.Green;
         Console.WriteLine($"Начата обработка плейлиста '{responseData.Result.Title}'");
         Console.ResetColor();
@@ -114,14 +115,14 @@ internal static class Program
                 }
             case ExportType.Json:
                 {
-                    SerializablePlaylist playlist = ModelMappingService.CreateSerilzableProject(responseData.Result);
+                    playlist = ModelMappingService.CreateSerilzableProject(responseData.Result);
                     outputFilePath = GetJsonFilePath(directory, responseData.Result.Title);
                     serialized = JsonSerialization.TryJsonFileExport(outputFilePath, playlist, _jsonOptions);
                     break;
                 }
             case ExportType.Xml:
                 {
-                    SerializablePlaylist playlist = ModelMappingService.CreateSerilzableProject(responseData.Result);
+                    playlist = ModelMappingService.CreateSerilzableProject(responseData.Result);
                     outputFilePath = GetXmlFilePath(directory, responseData.Result.Title);
                     serialized = XmlSerialization.TryXmlFileExport(outputFilePath, playlist, _dataEncoding);
                     break;
@@ -155,6 +156,11 @@ internal static class Program
             // открытие файла
             Process.Start(new ProcessStartInfo(outputFilePath) { UseShellExecute = true });
         }
+
+        if (playlist is not null)
+        {
+            LoadCovers(client, directory, playlist).Wait();
+        }
     }
 
     private static string GetSimpleFilePath(string directory, string playlistName) => Path.Combine(directory, $"{playlistName}.txt");
@@ -184,6 +190,39 @@ internal static class Program
         catch
         {
             return false;
+        }
+    }
+
+    public static async Task LoadCovers(HttpClient client, string directory, SerializablePlaylist serializablePlaylist)
+    {
+        string dirPath = Path.Combine(directory, $"{serializablePlaylist.Title}-Covers");
+        if (!Directory.Exists(dirPath))
+        {
+            Directory.CreateDirectory(dirPath);
+        }
+
+        foreach (SerializableTrack track in serializablePlaylist.Tracks)
+        {
+            if (string.IsNullOrEmpty(track.CoverUri))
+            {
+                continue;
+            }
+
+            Stream? dataStream = await client.GetCoverImageDataStrem(track.CoverUri);
+            if (dataStream is null)
+            {
+                continue;
+            }
+
+            string coverFilePath = Path.Combine(directory, $"{string.Join('_', track.Artists)}-{track.Title}.jpg");
+            try
+            {
+                using FileStream fs = new(coverFilePath, FileMode.CreateNew, FileAccess.Write);
+                dataStream.CopyTo(fs);
+                fs.Flush();
+                track.CoverFilePath = coverFilePath;
+            }
+            catch { }
         }
     }
 }

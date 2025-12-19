@@ -1,6 +1,5 @@
 ﻿namespace YandexMusicExport.YandexMusicApi.Contracts;
 
-
 [Serializable]
 public class Label
 {

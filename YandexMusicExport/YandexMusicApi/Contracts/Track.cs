@@ -3,7 +3,9 @@
 [Serializable]
 public class Track
 {
-    public string Title { get; set; } = string.Empty;
+    public string? Title { get; set; } = string.Empty;
+
+    public string? CoverUri { get; set; } = string.Empty;
 
     public Artist[] Artists { get; set; } = [];
 

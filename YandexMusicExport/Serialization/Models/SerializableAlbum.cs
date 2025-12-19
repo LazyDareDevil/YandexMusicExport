@@ -1,5 +1,4 @@
-﻿using System.Text.Json.Serialization;
-using System.Xml;
+﻿using System.Xml;
 using System.Xml.Serialization;
 
 namespace YandexMusicExport.Serialization.Models;
@@ -13,10 +12,7 @@ public class SerializableAlbum
     public int Year { get; set; }
 
     [XmlAttribute]
-    public DateTime ReleaseDate { get; set; }
-
-    [XmlAttribute]
-    public string Type { get; set; } = string.Empty;
+    public string ReleaseDate { get; set; } = string.Empty;
 
     [XmlAttribute]
     public string Genre { get; set; } = string.Empty;
@@ -29,10 +25,4 @@ public class SerializableAlbum
 
     [XmlArrayItem("Labels")]
     public string[] Labels { get; set; } = [];
-
-    [XmlIgnore]
-    [JsonIgnore]
-    public string CoverUri { get; set; } = string.Empty;
-
-    public string CoverImageFileName { get; set; } = string.Empty;
 }

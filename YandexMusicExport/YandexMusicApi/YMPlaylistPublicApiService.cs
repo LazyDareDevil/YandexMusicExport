@@ -1,7 +1,9 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Net.Http.Json;
+using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using YandexMusicExport.Serialization.Models;
 using YandexMusicExport.YandexMusicApi.Contracts;
 
 namespace YandexMusicExport.YandexMusicApi;
@@ -24,7 +26,7 @@ public static class YMPlaylistPublicApiService
         return correct;
     }
 
-    public static bool TryGetCoverPathLink(string coverUrl, [MaybeNullWhen(false)] out string link)
+    private static bool TryGetCoverPathLink(string coverUrl, [MaybeNullWhen(false)] out string link)
     {
         if (string.IsNullOrEmpty(coverUrl)
             || coverUrl.Length < 4)
@@ -33,8 +35,26 @@ public static class YMPlaylistPublicApiService
             return false;
         }
 
-        link = $"https://{coverUrl[..-3]}/200x200";
+        link = $"https://{coverUrl[..-2]}200x200";
         return true;
+    }
+
+    public static async Task<Stream?> GetCoverImageDataStrem(this HttpClient client, string coverUri)
+    {
+        if (!TryGetCoverPathLink(coverUri, out string? link))
+        {
+            return null;
+        }
+
+        try
+        {
+            HttpResponseMessage message = await client.SendAsync(new HttpRequestMessage(HttpMethod.Get, link));
+            return message.Content.ReadAsStream();
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     private static bool TryGetPlaylistApiDataFromWebAppData(this HttpClient client,
@@ -77,8 +97,9 @@ public static class YMPlaylistPublicApiService
         {
             // Отправка запроса по URL-адресу и получение ответа в формате JSON
             HttpResponseMessage response = client.Send(new HttpRequestMessage(HttpMethod.Get, uri));
-            // Добавлен энкодинг на все, чтобы не было проблем с символами
-            return await response.Content.ReadFromJsonAsync<PlaylistResponse>(options);
+            string text = await response.Content.ReadAsStringAsync();
+            return JsonSerializer.Deserialize<PlaylistResponse>(text, options);
+            //return await response.Content.ReadFromJsonAsync<PlaylistResponse>(options);
         }
         catch
         {
