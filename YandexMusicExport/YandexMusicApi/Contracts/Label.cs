@@ -1,7 +1,10 @@
 ﻿namespace YandexMusicExport.YandexMusicApi.Contracts;
 
+#pragma warning disable IDE1006 // Naming Styles
 [Serializable]
 public class Label
 {
-    public string Name { get; set; } = string.Empty;
+    public string name { get; set; } = string.Empty;
 }
+
+#pragma warning restore IDE1006 // Naming Styles

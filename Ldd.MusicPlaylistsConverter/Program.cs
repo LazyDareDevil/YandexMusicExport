@@ -2,7 +2,6 @@
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
-using System.Text.Unicode;
 using YandexMusicExport.Serialization;
 using YandexMusicExport.Serialization.Enums;
 using YandexMusicExport.Serialization.Models;
@@ -14,9 +13,8 @@ internal static class Program
     private static readonly Encoding _dataEncoding = Encoding.Unicode;
     private static readonly JsonSerializerOptions _jsonOptions = new()
     {
-        PropertyNameCaseInsensitive = false,
         WriteIndented = true,
-        Encoder = JavaScriptEncoder.Create(UnicodeRanges.All),
+        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
     };
 
     private static void Main(string[] args)
@@ -99,36 +97,34 @@ internal static class Program
         }
 
         PlaylistResponse? responseData = responseDataTask.Result;
-        string outputFilePath = string.Empty;
-        bool serialized = false;
-        SerializablePlaylist? playlist = null;
+        string outputFilePath;
+        bool serialized;
+        SerializablePlaylist? playlist;
         Console.ForegroundColor = ConsoleColor.Green;
-        Console.WriteLine($"Начата обработка плейлиста '{responseData.Result.Title}'");
+        Console.WriteLine($"Начата обработка плейлиста '{responseData.result.title}'");
         Console.ResetColor();
         switch (export)
         {
-            case ExportType.PlainText:
-                {
-                    outputFilePath = GetSimpleFilePath(directory, responseData.Result.Title);
-                    serialized = TrySerializeSimpleText(outputFilePath, responseData);
-                    break;
-                }
             case ExportType.Json:
                 {
-                    playlist = ModelMappingService.CreateSerilzableProject(responseData.Result);
-                    outputFilePath = GetJsonFilePath(directory, responseData.Result.Title);
+                    playlist = ModelMappingService.CreateSerilzableProject(responseData.result);
+                    outputFilePath = GetJsonFilePath(directory, responseData.result.title);
                     serialized = JsonSerialization.TryJsonFileExport(outputFilePath, playlist, _jsonOptions);
                     break;
                 }
             case ExportType.Xml:
                 {
-                    playlist = ModelMappingService.CreateSerilzableProject(responseData.Result);
-                    outputFilePath = GetXmlFilePath(directory, responseData.Result.Title);
+                    playlist = ModelMappingService.CreateSerilzableProject(responseData.result);
+                    outputFilePath = GetXmlFilePath(directory, responseData.result.title);
                     serialized = XmlSerialization.TryXmlFileExport(outputFilePath, playlist, _dataEncoding);
                     break;
                 }
             default:
-                break;
+                {
+                    outputFilePath = GetSimpleFilePath(directory, responseData.result.title);
+                    serialized = TrySerializeSimpleText(outputFilePath, responseData);
+                    break;
+                }
         }
 
         if (string.IsNullOrEmpty(outputFilePath))
@@ -148,7 +144,7 @@ internal static class Program
         }
 
         Console.ForegroundColor = ConsoleColor.Green;
-        Console.WriteLine($"Закончена обработка плейлиста '{responseData.Result.Title}'");
+        Console.WriteLine($"Закончена обработка плейлиста '{responseData.result.title}'");
         Console.ResetColor();
         Console.WriteLine($"Список треков сохранен рядом с файлом программы (файл {outputFilePath}).\n");
         if (File.Exists(outputFilePath))
@@ -157,10 +153,10 @@ internal static class Program
             Process.Start(new ProcessStartInfo(outputFilePath) { UseShellExecute = true });
         }
 
-        if (playlist is not null)
-        {
-            LoadCovers(client, directory, playlist).Wait();
-        }
+        //if (playlist is not null)
+        //{
+        //    LoadCovers(client, directory, playlist).Wait();
+        //}
     }
 
     private static string GetSimpleFilePath(string directory, string playlistName) => Path.Combine(directory, $"{playlistName}.txt");
@@ -173,13 +169,13 @@ internal static class Program
     {
         try
         {
-            string publicLink = YMPlaylistPathService.GetPlaylistPublicLink(responseData.Result.PlaylistUuid);
+            string publicLink = YMPlaylistPathService.GetPlaylistPublicLink(responseData.result.playlistUuid);
             using StreamWriter textFile = new(outputFilePath);
-            string lineText = $"Playlist '{responseData.Result.Title}' | {publicLink}";
+            string lineText = $"Playlist '{responseData.result.title}' | {publicLink}";
             textFile.WriteLine(lineText);
-            foreach (Track track in responseData.Result.Tracks.Select(t => t.Track))
+            foreach (Track track in responseData.result.tracks.Select(t => t.track))
             {
-                lineText = string.Format("{0} - {1}", string.Join(", ", track.Artists.Select(a => a.Name)).TrimEnd(',', ' '), track.Title);
+                lineText = string.Format("{0} - {1}", string.Join(", ", track.artists.Select(a => a.name)).TrimEnd(',', ' '), track.title);
                 textFile.WriteLine(lineText);
                 Console.WriteLine(lineText);
             }
@@ -214,7 +210,7 @@ internal static class Program
                 continue;
             }
 
-            string coverFilePath = Path.Combine(directory, $"{string.Join('_', track.Artists)}-{track.Title}.jpg");
+            string coverFilePath = Path.Combine(dirPath, $"{string.Join('_', track.Artists)}-{track.Title}.jpg");
             try
             {
                 using FileStream fs = new(coverFilePath, FileMode.CreateNew, FileAccess.Write);

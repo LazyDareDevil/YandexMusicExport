@@ -9,25 +9,25 @@ public static class ModelMappingService
     public static SerializablePlaylist CreateSerilzableProject(PlaylistResult playlist)
         => new()
         {
-            Title = playlist.Title ?? string.Empty,
-            PlaylistPublicLink = YMPlaylistPathService.GetPlaylistPublicLink(playlist.PlaylistUuid ?? string.Empty),
-            Uid = playlist.Uid,
-            Kind = playlist.Kind,
-            TrackCount = playlist.TrackCount,
-            Tracks = [.. playlist.Tracks.Select(t => t.Track).Select( t => new SerializableTrack() {
-                Title = t.Title ?? string.Empty,
-                Artists = [..t.Artists.Select(a => a.Name)],
-                CoverUri = t.CoverUri ?? string.Empty,
-                //Volume = t.Albums.FirstOrDefault()?.TrackPosition?.Volume ?? 0,
-                //Index = t.Albums.FirstOrDefault()?.TrackPosition?.Index ?? 0,
-                Albums = [..t.Albums.Select(a => new SerializableAlbum() {
-                    Title = a.Title ?? string.Empty,
-                    Year = a.Year ?? 0,
-                    ReleaseDate = a.ReleaseDate ?? string.Empty,
-                    Genre = a.Genre ?? string.Empty,
-                    TrackCount = a.TrackCount ?? 0,
-                    Artists = [..a.Artists.Select(a => a.Name)],
-                    Labels = [..a.Labels.Select(a => a.Name)]
+            Title = playlist.title,
+            PlaylistPublicLink = YMPlaylistPathService.GetPlaylistPublicLink(playlist.playlistUuid),
+            Uid = playlist.uid,
+            Kind = playlist.kind,
+            TrackCount = playlist.trackCount,
+            Tracks = [.. playlist.tracks.Select(t => t.track).Select( t => new SerializableTrack() {
+                Title = t.title,
+                Artists = [..t.artists.Select(a => a.name)],
+                CoverUri = t.coverUri,
+                Volume = t.albums.FirstOrDefault()?.trackPosition?.volume ?? 0,
+                Index = t.albums.FirstOrDefault()?.trackPosition?.index ?? 0,
+                Albums = [..t.albums.Select(a => new SerializableAlbum() {
+                    Title = a.title,
+                    Artists = [..a.artists.Select(a => a.name)],
+                    Year = a.year,
+                    TrackCount = a.trackCount,
+                    ReleaseDate = a.releaseDate,
+                    Genre = a.genre,
+                    Labels = [..a.labels.Select(a => a.name)]
                 })]
             })]
         };

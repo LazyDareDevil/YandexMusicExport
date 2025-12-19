@@ -1,23 +1,25 @@
 ﻿namespace YandexMusicExport.YandexMusicApi.Contracts;
 
+#pragma warning disable IDE1006 // Naming Styles
 [Serializable]
 public class Album
 {
-    public string? Title { get; set; } = string.Empty;
+    public string title { get; set; } = string.Empty;
 
-    public int? Year { get; set; }
+    public int year { get; set; }
 
-    public string? ReleaseDate { get; set; } = string.Empty;
+    public int trackCount { get; set; } = 0;
 
-    public string? Genre { get; set; } = string.Empty;
+    public Artist[] artists { get; set; } = [];
 
-    public int? TrackCount { get; set; } = 0;
+    public string releaseDate { get; set; } = string.Empty;
 
-    public Artist[] Artists { get; set; } = [];
+    public string genre { get; set; } = string.Empty;
 
-    public Label[] Labels { get; set; } = [];
+    public Label[] labels { get; set; } = [];
 
-    public string? CoverUri { get; set; } = string.Empty;
+    public string? coverUri { get; set; } = string.Empty;
 
-    public TrackPosition? TrackPosition { get; set; }
+    public TrackPosition? trackPosition { get; set; }
 }
+#pragma warning restore IDE1006 // Naming Styles

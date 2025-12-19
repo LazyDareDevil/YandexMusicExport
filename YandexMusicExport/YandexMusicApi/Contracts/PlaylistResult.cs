@@ -1,17 +1,20 @@
 ﻿namespace YandexMusicExport.YandexMusicApi.Contracts;
 
+#pragma warning disable IDE1006 // Naming Styles
 [Serializable]
 public class PlaylistResult
 {
-    public string? PlaylistUuid { get; set; } = string.Empty;
+    public string playlistUuid { get; set; } = string.Empty;
 
-    public int Uid { get; set; }
+    public string title { get; set; } = string.Empty;
 
-    public int Kind { get; set; }
+    public int trackCount { get; set; } = 0;
 
-    public string? Title { get; set; } = string.Empty;
+    public TrackResult[] tracks { get; set; } = [];
 
-    public int TrackCount { get; set; }
+    public int uid { get; set; }
 
-    public TrackResult[] Tracks { get; set; } = [];
+    public int kind { get; set; }
 }
+
+#pragma warning restore IDE1006 // Naming Styles

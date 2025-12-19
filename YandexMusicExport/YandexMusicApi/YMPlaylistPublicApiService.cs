@@ -1,9 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Net.Http.Json;
-using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using YandexMusicExport.Serialization.Models;
 using YandexMusicExport.YandexMusicApi.Contracts;
 
 namespace YandexMusicExport.YandexMusicApi;
@@ -35,7 +33,8 @@ public static class YMPlaylistPublicApiService
             return false;
         }
 
-        link = $"https://{coverUrl[..-2]}200x200";
+        string croppedUrl = coverUrl[..^2];
+        link = $"https://{croppedUrl}200x200";
         return true;
     }
 
@@ -97,9 +96,7 @@ public static class YMPlaylistPublicApiService
         {
             // Отправка запроса по URL-адресу и получение ответа в формате JSON
             HttpResponseMessage response = client.Send(new HttpRequestMessage(HttpMethod.Get, uri));
-            string text = await response.Content.ReadAsStringAsync();
-            return JsonSerializer.Deserialize<PlaylistResponse>(text, options);
-            //return await response.Content.ReadFromJsonAsync<PlaylistResponse>(options);
+            return await response.Content.ReadFromJsonAsync<PlaylistResponse>(options);
         }
         catch
         {
