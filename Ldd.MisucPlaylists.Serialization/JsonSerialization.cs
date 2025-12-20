@@ -1,7 +1,7 @@
-﻿using System.Text.Json;
-using YandexMusicExport.Serialization.Models;
+﻿using Ldd.MisucPlaylists.Serialization.Models;
+using System.Text.Json;
 
-namespace YandexMusicExport.Serialization;
+namespace Ldd.MisucPlaylists.Serialization;
 
 public static class JsonSerialization
 {

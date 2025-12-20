@@ -4,7 +4,7 @@ namespace YandexMusicExport.YandexMusicApi;
 
 public static class YMPlaylistPathService
 {
-    // api playlist url style : https://api.music.yandex.net/users/user-id/playlists/playlist-id";
+    // api playlist url style : https://api.music.yandex.net/users/user-id/playlists/playlist-id;
     //uriParts[0] == "https:";
     //uriParts[1] == "";
     //uriParts[2] == "api.music.yandex.net";
@@ -12,7 +12,7 @@ public static class YMPlaylistPathService
     //uriParts[4] == "{user-id}"
     //uriParts[5] == "playlists"
     //uriParts[6] == "{playlist-id}"
-    internal static bool TryParseApiStylePath(string[] pathParts, [MaybeNullWhen(false)] out int userId, [MaybeNullWhen(false)] out int playlistId)
+    internal static bool TryParseApiStylePlaylistPath(string[] pathParts, [MaybeNullWhen(false)] out int userId, [MaybeNullWhen(false)] out int playlistId)
     {
         userId = -1;
         playlistId = -1;
@@ -29,7 +29,7 @@ public static class YMPlaylistPathService
     //uriParts[2] == "music.yandex.ru";
     //uriParts[3] == "playlists";
     //uriParts[4] == "lk.{some-guid}"; OR uriParts[4] = "{some-guid}";
-    internal static bool TryParseWebAppStylePath(string[] urlParts, [MaybeNullWhen(false)] out string playlistId)
+    internal static bool TryParseWebAppStylePlaylistPath(string[] urlParts, [MaybeNullWhen(false)] out string playlistId)
     {
         playlistId = null;
         if (urlParts.Length < 5
@@ -54,9 +54,43 @@ public static class YMPlaylistPathService
         return Guid.TryParse(id, out _);
     }
 
+    // api playlist url style : https://api.music.yandex.net/album/album-id;
+    //uriParts[0] == "https:";
+    //uriParts[1] == "";
+    //uriParts[2] == "api.music.yandex.net";
+    //uriParts[3] == "album";
+    //uriParts[4] == "{album-id}"
+    internal static bool TryParseApiStyleAlbumPath(string[] pathParts, [MaybeNullWhen(false)] out int albumId)
+    {
+        albumId = -1;
+        return pathParts.Length >= 5
+            && pathParts[3].Equals("album", StringComparison.OrdinalIgnoreCase)
+            && int.TryParse(pathParts[4], out albumId);
+    }
+
+    // api playlist url style : https://music.yandex.ru/album/album-id;
+    //uriParts[0] == "https:";
+    //uriParts[1] == "";
+    //uriParts[2] == "music.yandex.ru";
+    //uriParts[3] == "album";
+    //uriParts[4] == "{album-id}"
+    internal static bool TryParseWebAppStyleAlbumPath(string[] pathParts, [MaybeNullWhen(false)] out int albumId)
+    {
+        albumId = -1;
+        return pathParts.Length >= 5
+            && pathParts[3].Equals("album", StringComparison.OrdinalIgnoreCase)
+            && int.TryParse(pathParts[4], out albumId);
+    }
+
     internal static string GetPlaylistDataRequestLink(int userId, int playlistId)
         => $"https://api.music.yandex.net/users/{userId}/playlists/{playlistId}";
 
     public static string GetPlaylistPublicLink(string playlistUuid) 
         => $"https://music.yandex.ru/playlists/{playlistUuid}";
+
+    public static string GetAlbumWithTracksLink(int albumId)
+        => $"https://api.music.yandex.net/albums/{albumId}/with-tracks";
+
+    public static string GetTrackDownloadInfoLink(int trackId)
+        => $"https://api.music.yandex.net/tracks/{trackId}/download-info";
 }

@@ -2,7 +2,7 @@
 
 #pragma warning disable IDE1006 // Naming Styles
 [Serializable]
-public class PlaylistResult
+public class Playlist
 {
     public string playlistUuid { get; set; } = string.Empty;
 

@@ -1,7 +1,7 @@
 ﻿using System.Xml;
 using System.Xml.Serialization;
 
-namespace YandexMusicExport.Serialization.Models;
+namespace Ldd.MisucPlaylists.Serialization.Models;
 
 [XmlRoot("Album")]
 public class SerializableAlbum

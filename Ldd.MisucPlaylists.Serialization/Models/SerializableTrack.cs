@@ -1,7 +1,7 @@
 ﻿using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 
-namespace YandexMusicExport.Serialization.Models;
+namespace Ldd.MisucPlaylists.Serialization.Models;
 
 [XmlRoot("Track")]
 public class SerializableTrack
@@ -12,6 +12,8 @@ public class SerializableTrack
     [JsonIgnore]
     public string CoverUri { get; set; } = string.Empty;
 
+    [XmlIgnore]
+    [JsonIgnore]
     public string CoverFilePath { get; set; } = string.Empty;
 
     [XmlArrayItem("Artist")]

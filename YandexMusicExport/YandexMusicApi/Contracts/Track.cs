@@ -4,6 +4,8 @@
 [Serializable]
 public class Track
 {
+    public int id { get; set; }
+
     public string title { get; set; } = string.Empty;
 
     public Artist[] artists { get; set; } = [];

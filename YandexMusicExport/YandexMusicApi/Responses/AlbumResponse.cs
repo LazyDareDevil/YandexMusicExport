@@ -2,11 +2,9 @@
 
 #pragma warning disable IDE1006 // Naming Styles
 [Serializable]
-public class Label
+public class AlbumResponse
 {
-    public int id { get; set; }
-
-    public string name { get; set; } = string.Empty;
+    public Album result { get; set; } = new();
 }
 
 #pragma warning restore IDE1006 // Naming Styles

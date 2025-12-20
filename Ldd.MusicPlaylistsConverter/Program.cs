@@ -1,12 +1,13 @@
-﻿using System.Diagnostics;
+﻿using Ldd.MisucPlaylists.Serialization;
+using Ldd.MisucPlaylists.Serialization.Models;
+using Ldd.MusicPlaylistsConverter;
+using System.Diagnostics;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
-using YandexMusicExport.Serialization;
-using YandexMusicExport.Serialization.Enums;
-using YandexMusicExport.Serialization.Models;
 using YandexMusicExport.YandexMusicApi;
 using YandexMusicExport.YandexMusicApi.Contracts;
+using YandexMusicExport.YandexMusicApi.Responses;
 
 internal static class Program
 {
@@ -82,7 +83,7 @@ internal static class Program
             return;
         }
 
-        Task<PlaylistResponse?> responseDataTask = client.TryGetPlayliistData(userId, playlistId, _jsonOptions);
+        Task<PlaylistResponse?> responseDataTask = client.TryGetPlaylistData(userId, playlistId, _jsonOptions);
         responseDataTask.Wait();
         if (responseDataTask.Result is null)
         {

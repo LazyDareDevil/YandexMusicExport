@@ -4,6 +4,8 @@
 [Serializable]
 public class Album
 {
+    public int id { get; set; }
+
     public string title { get; set; } = string.Empty;
 
     public int year { get; set; }
@@ -21,5 +23,7 @@ public class Album
     public string? coverUri { get; set; } = string.Empty;
 
     public TrackPosition? trackPosition { get; set; }
+
+    public Volume[]? volumes { get; set; } = [];
 }
 #pragma warning restore IDE1006 // Naming Styles

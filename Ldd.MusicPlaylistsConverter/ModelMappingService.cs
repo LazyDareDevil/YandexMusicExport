@@ -1,8 +1,8 @@
-﻿using YandexMusicExport.Serialization.Models;
+﻿using Ldd.MisucPlaylists.Serialization.Models;
 using YandexMusicExport.YandexMusicApi;
 using YandexMusicExport.YandexMusicApi.Contracts;
 
-namespace YandexMusicExport.Serialization;
+namespace Ldd.MusicPlaylistsConverter;
 
 public static class ModelMappingService
 {

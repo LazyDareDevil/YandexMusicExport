@@ -2,7 +2,7 @@
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using YandexMusicExport.YandexMusicApi.Contracts;
+using YandexMusicExport.YandexMusicApi.Responses;
 
 namespace YandexMusicExport.YandexMusicApi;
 
@@ -12,10 +12,10 @@ public static class YMPlaylistPublicApiService
     {
         // Разделение исходного URL-адреса по символу "/"
         string[] uriParts = link.Split('/', '?');
-        bool correct = YMPlaylistPathService.TryParseApiStylePath(uriParts, out userId, out playlistId);
+        bool correct = YMPlaylistPathService.TryParseApiStylePlaylistPath(uriParts, out userId, out playlistId);
         if (!correct)
         {
-            if (YMPlaylistPathService.TryParseWebAppStylePath(uriParts, out string? playlistUuid))
+            if (YMPlaylistPathService.TryParseWebAppStylePlaylistPath(uriParts, out string? playlistUuid))
             {
                 return TryGetPlaylistApiDataFromWebAppData(client, link, playlistUuid, out userId, out playlistId);
             }
@@ -88,7 +88,7 @@ public static class YMPlaylistPublicApiService
         return userFound && playlistFound;
     }
 
-    public static async Task<PlaylistResponse?> TryGetPlayliistData(this HttpClient client, int userId, int playlistId, JsonSerializerOptions? options = null)
+    public static async Task<PlaylistResponse?> TryGetPlaylistData(this HttpClient client, int userId, int playlistId, JsonSerializerOptions? options = null)
     {
         // Формирование URL-адреса для запроса к серверу Яндекс Музыки
         string uri = YMPlaylistPathService.GetPlaylistDataRequestLink(userId, playlistId);

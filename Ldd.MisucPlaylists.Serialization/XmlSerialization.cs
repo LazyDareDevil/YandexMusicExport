@@ -1,9 +1,9 @@
-﻿using System.Text;
-using System.Xml.Serialization;
+﻿using Ldd.MisucPlaylists.Serialization.Models;
+using System.Text;
 using System.Xml;
-using YandexMusicExport.Serialization.Models;
+using System.Xml.Serialization;
 
-namespace YandexMusicExport.Serialization;
+namespace Ldd.MisucPlaylists.Serialization;
 
 public static class XmlSerialization
 {
