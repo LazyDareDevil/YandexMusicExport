@@ -12,10 +12,10 @@ public static class YMPlaylistPublicApiService
     {
         // Разделение исходного URL-адреса по символу "/"
         string[] uriParts = link.Split('/', '?');
-        bool correct = YMPlaylistPathService.TryParseApiStylePlaylistPath(uriParts, out userId, out playlistId);
+        bool correct = YMLinkParseService.TryParseApiStylePlaylistPath(uriParts, out userId, out playlistId);
         if (!correct)
         {
-            if (YMPlaylistPathService.TryParseWebAppStylePlaylistPath(uriParts, out string? playlistUuid))
+            if (YMLinkParseService.TryParseWebAppStylePlaylistPath(uriParts, out string? playlistUuid))
             {
                 return TryGetPlaylistApiDataFromWebAppData(client, link, playlistUuid, out userId, out playlistId);
             }
@@ -91,7 +91,7 @@ public static class YMPlaylistPublicApiService
     public static async Task<PlaylistResponse?> TryGetPlaylistData(this HttpClient client, int userId, int playlistId, JsonSerializerOptions? options = null)
     {
         // Формирование URL-адреса для запроса к серверу Яндекс Музыки
-        string uri = YMPlaylistPathService.GetPlaylistDataRequestLink(userId, playlistId);
+        string uri = YMPublicApiLinkService.GetPlaylistDataRequestLink(userId, playlistId);
         try
         {
             // Отправка запроса по URL-адресу и получение ответа в формате JSON

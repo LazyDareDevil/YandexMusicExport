@@ -3,7 +3,7 @@
 namespace YandexMusicExport.YandexMusicApi.Responses;
 
 [XmlRoot("download-info")]
-public class TrackDownloadSource
+public class TrackDownloadSourceResponse
 {
     [XmlElement("host")]
     public string Host { get; set; } = string.Empty;

@@ -6,11 +6,11 @@ namespace Ldd.MusicPlaylistsConverter;
 
 public static class ModelMappingService
 {
-    public static SerializablePlaylist CreateSerilzableProject(PlaylistResult playlist)
+    public static SerializablePlaylist CreateSerilzableProject(Playlist playlist)
         => new()
         {
             Title = playlist.title,
-            PlaylistPublicLink = YMPlaylistPathService.GetPlaylistPublicLink(playlist.playlistUuid),
+            PlaylistPublicLink = YMPublicApiLinkService.GetPlaylistPublicLink(playlist.playlistUuid),
             Uid = playlist.uid,
             Kind = playlist.kind,
             TrackCount = playlist.trackCount,

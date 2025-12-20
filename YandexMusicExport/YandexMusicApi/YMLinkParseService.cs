@@ -2,7 +2,7 @@
 
 namespace YandexMusicExport.YandexMusicApi;
 
-public static class YMPlaylistPathService
+internal static class YMLinkParseService
 {
     // api playlist url style : https://api.music.yandex.net/users/user-id/playlists/playlist-id;
     //uriParts[0] == "https:";
@@ -81,16 +81,4 @@ public static class YMPlaylistPathService
             && pathParts[3].Equals("album", StringComparison.OrdinalIgnoreCase)
             && int.TryParse(pathParts[4], out albumId);
     }
-
-    internal static string GetPlaylistDataRequestLink(int userId, int playlistId)
-        => $"https://api.music.yandex.net/users/{userId}/playlists/{playlistId}";
-
-    public static string GetPlaylistPublicLink(string playlistUuid) 
-        => $"https://music.yandex.ru/playlists/{playlistUuid}";
-
-    public static string GetAlbumWithTracksLink(int albumId)
-        => $"https://api.music.yandex.net/albums/{albumId}/with-tracks";
-
-    public static string GetTrackDownloadInfoLink(int trackId)
-        => $"https://api.music.yandex.net/tracks/{trackId}/download-info";
 }

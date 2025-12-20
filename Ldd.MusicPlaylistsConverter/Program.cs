@@ -170,7 +170,7 @@ internal static class Program
     {
         try
         {
-            string publicLink = YMPlaylistPathService.GetPlaylistPublicLink(responseData.result.playlistUuid);
+            string publicLink = YMPublicApiLinkService.GetPlaylistPublicLink(responseData.result.playlistUuid);
             using StreamWriter textFile = new(outputFilePath);
             string lineText = $"Playlist '{responseData.result.title}' | {publicLink}";
             textFile.WriteLine(lineText);
@@ -218,6 +218,7 @@ internal static class Program
                 dataStream.CopyTo(fs);
                 fs.Flush();
                 track.CoverFilePath = coverFilePath;
+                dataStream.Dispose();
             }
             catch { }
         }

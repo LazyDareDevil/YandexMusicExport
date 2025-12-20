@@ -9,7 +9,7 @@ public static class YMAlbumPublicApiService
     public static async Task<AlbumResponse?> TryGetAlbumData(this HttpClient client, int albumId, JsonSerializerOptions? options = null)
     {
         // Формирование URL-адреса для запроса к серверу Яндекс Музыки
-        string uri = YMPlaylistPathService.GetAlbumWithTracksLink(albumId);
+        string uri = YMPublicApiLinkService.GetAlbumWithTracksLink(albumId);
         try
         {
             // Отправка запроса по URL-адресу и получение ответа в формате JSON
