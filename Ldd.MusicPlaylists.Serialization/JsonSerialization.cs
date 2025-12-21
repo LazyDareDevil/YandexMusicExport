@@ -1,7 +1,7 @@
-﻿using Ldd.MisucPlaylists.Serialization.Models;
+﻿using Ldd.MusicPlaylists.Serialization.Models;
 using System.Text.Json;
 
-namespace Ldd.MisucPlaylists.Serialization;
+namespace Ldd.MusicPlaylists.Serialization;
 
 public static class JsonSerialization
 {

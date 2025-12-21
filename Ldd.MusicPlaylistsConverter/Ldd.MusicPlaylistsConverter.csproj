@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Ldd.MisucPlaylists.Serialization\Ldd.MisucPlaylists.Serialization.csproj" />
+    <ProjectReference Include="..\Ldd.MusicPlaylists.Serialization\Ldd.MusicPlaylists.Serialization.csproj" />
     <ProjectReference Include="..\YandexMusicExport\YandexMusicExport.csproj" />
   </ItemGroup>
 

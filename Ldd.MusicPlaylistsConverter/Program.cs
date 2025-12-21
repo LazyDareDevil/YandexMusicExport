@@ -1,5 +1,5 @@
-﻿using Ldd.MisucPlaylists.Serialization;
-using Ldd.MisucPlaylists.Serialization.Models;
+﻿using Ldd.MusicPlaylists.Serialization;
+using Ldd.MusicPlaylists.Serialization.Models;
 using Ldd.MusicPlaylistsConverter;
 using System.Diagnostics;
 using System.Text;

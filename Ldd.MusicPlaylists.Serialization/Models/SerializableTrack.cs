@@ -1,7 +1,7 @@
 ﻿using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 
-namespace Ldd.MisucPlaylists.Serialization.Models;
+namespace Ldd.MusicPlaylists.Serialization.Models;
 
 [XmlRoot("Track")]
 public class SerializableTrack

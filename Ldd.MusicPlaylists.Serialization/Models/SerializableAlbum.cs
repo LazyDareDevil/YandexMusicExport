@@ -1,7 +1,7 @@
 ﻿using System.Xml;
 using System.Xml.Serialization;
 
-namespace Ldd.MisucPlaylists.Serialization.Models;
+namespace Ldd.MusicPlaylists.Serialization.Models;
 
 [XmlRoot("Album")]
 public class SerializableAlbum

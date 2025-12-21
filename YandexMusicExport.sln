@@ -10,6 +10,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".SolutionItems", ".SolutionItems", "{BD0599AE-06A1-4996-98FC-EA2CAC2B8CB8}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
+		.gitignore = .gitignore
 	EndProjectSection
 EndProject
 Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "Ldd.YandexMusicConversion", "Ldd.YandexMusicConversion\Ldd.YandexMusicConversion.pyproj", "{339C1597-48CE-4DCC-B420-6787706A6004}"
@@ -18,7 +19,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ldd.MusicFilesMetadata", "L
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ldd.MusicPlaylists.Domain", "Ldd.MusicPlaylists.Domain\Ldd.MusicPlaylists.Domain.csproj", "{48AA12D4-4324-4585-83F3-4E46C23EC606}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ldd.MisucPlaylists.Serialization", "Ldd.MisucPlaylists.Serialization\Ldd.MisucPlaylists.Serialization.csproj", "{538B6ACF-C884-4AB5-BA53-DE8D1938DA9F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ldd.MusicPlaylists.Serialization", "Ldd.MusicPlaylists.Serialization\Ldd.MusicPlaylists.Serialization.csproj", "{3B01173E-F052-4334-940D-D6F07FA6C874}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -44,10 +45,10 @@ Global
 		{48AA12D4-4324-4585-83F3-4E46C23EC606}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{48AA12D4-4324-4585-83F3-4E46C23EC606}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{48AA12D4-4324-4585-83F3-4E46C23EC606}.Release|Any CPU.Build.0 = Release|Any CPU
-		{538B6ACF-C884-4AB5-BA53-DE8D1938DA9F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{538B6ACF-C884-4AB5-BA53-DE8D1938DA9F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{538B6ACF-C884-4AB5-BA53-DE8D1938DA9F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{538B6ACF-C884-4AB5-BA53-DE8D1938DA9F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3B01173E-F052-4334-940D-D6F07FA6C874}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3B01173E-F052-4334-940D-D6F07FA6C874}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3B01173E-F052-4334-940D-D6F07FA6C874}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3B01173E-F052-4334-940D-D6F07FA6C874}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
