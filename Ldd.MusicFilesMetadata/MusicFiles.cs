@@ -87,9 +87,14 @@ public static class MusicFiles
             }
         }
 
+        // TODO: how to unset number value property?
         if (attributes.TrackNumber.HasValue)
         {
             musicProperties.TrackNumber = attributes.TrackNumber.Value;
+        }
+        else if (musicProperties.TrackNumber != 0)
+        {
+            musicProperties.TrackNumber = 0;
         }
 
         if (attributes.Year.HasValue)
