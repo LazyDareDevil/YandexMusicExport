@@ -1,6 +1,7 @@
 ﻿using Ldd.MusicPlaylists.Serialization;
 using Ldd.MusicPlaylists.Serialization.Models;
 using Ldd.MusicPlaylistsConverter;
+using Ldd.YandexMusicAuthorization;
 using System.Diagnostics;
 using System.Text;
 using System.Text.Encodings.Web;
@@ -21,6 +22,8 @@ internal static class Program
     private static void Main(string[] args)
     {
         string directory = AppContext.BaseDirectory;
+
+        YMAuthorization.TryGetAuthToken(SupportedBrowser.Chrome, out var authToken);
 
         Console.ForegroundColor = ConsoleColor.White;
         Console.BackgroundColor = ConsoleColor.DarkMagenta;

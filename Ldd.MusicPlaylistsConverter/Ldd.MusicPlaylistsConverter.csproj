@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Ldd.MusicPlaylists.Serialization\Ldd.MusicPlaylists.Serialization.csproj" />
+    <ProjectReference Include="..\Ldd.YandexMusicAuthorization\Ldd.YandexMusicAuthorization.csproj" />
     <ProjectReference Include="..\YandexMusicExport\YandexMusicExport.csproj" />
   </ItemGroup>
 
