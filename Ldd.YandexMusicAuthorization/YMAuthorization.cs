@@ -160,11 +160,22 @@ public static class YMAuthorization
             return false;
         }
 
-        if (urlFragmentParent is not null
-            && urlFragmentParent.AsObject().TryGetPropertyValue("urlFragment", out JsonNode? urlFragment)
-            && urlFragment is not null)
+        if (urlFragmentParent is null
+            || !urlFragmentParent.AsObject().TryGetPropertyValue("urlFragment", out JsonNode? urlFragment)
+            || urlFragment is null)
         {
-            authToken = urlFragment.GetValue<string>();
+            return false;
+        }
+
+        authToken = urlFragment.GetValue<string>();
+        string[] splits = authToken.Split('=', '&');
+        if (splits.Length < 2)
+        {
+            authToken = null;
+        }
+        else
+        {
+            authToken = splits[1];
         }
 
         return !string.IsNullOrEmpty(authToken);
