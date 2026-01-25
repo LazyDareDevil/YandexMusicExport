@@ -1,7 +1,6 @@
 ﻿using Ldd.MusicPlaylists.Serialization;
 using Ldd.MusicPlaylists.Serialization.Models;
 using Ldd.MusicPlaylistsConverter;
-using Ldd.YandexMusicAuthorization;
 using System.Diagnostics;
 using System.Text;
 using System.Text.Encodings.Web;
@@ -12,7 +11,7 @@ using YandexMusicExport.YandexMusicApi.Responses;
 
 internal static class Program
 {
-    private static readonly Encoding _dataEncoding = Encoding.Unicode;
+    private static readonly Encoding _dataEncoding = Encoding.UTF8;
     private static readonly JsonSerializerOptions _jsonOptions = new()
     {
         WriteIndented = true,
@@ -23,7 +22,7 @@ internal static class Program
     {
         string directory = AppContext.BaseDirectory;
 
-        YMAuthorization.TryGetAuthToken(SupportedBrowser.Chrome, out var authToken);
+        //YMAuthorization.TryGetAuthToken(SupportedBrowser.Chrome, out var authToken);
 
         Console.ForegroundColor = ConsoleColor.White;
         Console.BackgroundColor = ConsoleColor.DarkMagenta;

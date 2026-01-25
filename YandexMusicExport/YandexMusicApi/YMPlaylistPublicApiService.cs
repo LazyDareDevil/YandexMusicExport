@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -88,6 +89,7 @@ public static class YMPlaylistPublicApiService
         return userFound && playlistFound;
     }
 
+    [SuppressMessage("Style", "IDE0059:Unnecessary assignment of a value", Justification = "<Pending>")]
     public static async Task<PlaylistResponse?> TryGetPlaylistData(this HttpClient client, int userId, int playlistId, JsonSerializerOptions? options = null)
     {
         // Формирование URL-адреса для запроса к серверу Яндекс Музыки
@@ -98,8 +100,14 @@ public static class YMPlaylistPublicApiService
             HttpResponseMessage response = client.Send(new HttpRequestMessage(HttpMethod.Get, uri));
             return await response.Content.ReadFromJsonAsync<PlaylistResponse>(options);
         }
+#if DEBUG
+        catch (Exception ex)
+        {
+            Debug.WriteLine(ex);
+#else
         catch
         {
+#endif
             return null;
         }
     }

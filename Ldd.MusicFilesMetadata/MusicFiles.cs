@@ -1,6 +1,5 @@
 ﻿using Ldd.MusicFilesMetadata.Parameters;
-using System.Diagnostics.CodeAnalysis;
-using System.Text.RegularExpressions;
+using System.IO;
 using Windows.Storage;
 using Windows.Storage.FileProperties;
 
@@ -8,37 +7,6 @@ namespace Ldd.MusicFilesMetadata;
 
 public static class MusicFiles
 {
-    public static bool TryRenameFile(string filePath, Regex findPattern, [MaybeNullWhen(false)] out string newFilePath)
-    {
-        newFilePath = null;
-        if (!File.Exists(filePath))
-        {
-            return false;
-        }
-
-        Regex r = new(@"(\d)+\w-\w(<fileName>)\w\[audiovk\.com\]");
-        string? direstoryPath = Path.GetDirectoryName(filePath);
-        if (string.IsNullOrWhiteSpace(direstoryPath))
-        {
-            return false;
-        }
-
-        string fileName = Path.GetFileNameWithoutExtension(filePath);
-        string fileExtension = Path.GetExtension(filePath);
-        string newFileName =  findPattern.Replace(fileName, "");
-        newFilePath = Path.Combine(direstoryPath, $"{newFileName}{fileExtension}");
-        try
-        {
-            File.Move(filePath, newFilePath);
-            return true;
-        }
-        catch
-        {
-            newFilePath = null;
-            return false;
-        }
-    }
-
     public static async Task<bool> TryReplaceFileMetadata(string filePath, MusicFileAttributes attributes)
     {
         if (!File.Exists(filePath))
@@ -87,20 +55,16 @@ public static class MusicFiles
             }
         }
 
-        // TODO: how to unset number value property?
-        if (attributes.TrackNumber.HasValue)
+        if (attributes.TrackNumber > 0)
         {
-            musicProperties.TrackNumber = attributes.TrackNumber.Value;
+            musicProperties.TrackNumber = attributes.TrackNumber;
         }
         else if (musicProperties.TrackNumber != 0)
         {
             musicProperties.TrackNumber = 0;
         }
 
-        if (attributes.Year.HasValue)
-        {
-            musicProperties.Year = attributes.Year.Value;
-        }
+        musicProperties.Year = attributes.Year;
 
         try
         {

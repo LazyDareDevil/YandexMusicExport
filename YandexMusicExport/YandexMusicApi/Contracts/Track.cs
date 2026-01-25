@@ -4,7 +4,7 @@
 [Serializable]
 public class Track
 {
-    public int id { get; set; }
+    public string id { get; set; } = string.Empty;
 
     public string title { get; set; } = string.Empty;
 

@@ -4,6 +4,12 @@
     <TargetFramework>net9.0-windows10.0.26100.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <OutputType>Exe</OutputType>
+	<UseWPF>True</UseWPF>
   </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Ldd.MusicPlaylists.Serialization\Ldd.MusicPlaylists.Serialization.csproj" />
+  </ItemGroup>
 
 </Project>

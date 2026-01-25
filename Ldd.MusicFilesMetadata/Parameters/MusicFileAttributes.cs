@@ -2,7 +2,7 @@
 
 public sealed class MusicFileAttributes
 {
-    public uint? TrackNumber { get; set; }
+    public uint TrackNumber { get; set; }
 
     public string? Title { get; set; }
 
@@ -14,5 +14,5 @@ public sealed class MusicFileAttributes
 
     public string? Album { get; set; }
 
-    public uint? Year { get; set; }
+    public uint Year { get; set; }
 }

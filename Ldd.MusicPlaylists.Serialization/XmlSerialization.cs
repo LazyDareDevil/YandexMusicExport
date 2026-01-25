@@ -1,4 +1,5 @@
 ﻿using Ldd.MusicPlaylists.Serialization.Models;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
@@ -39,5 +40,23 @@ public static class XmlSerialization
 
         using XmlWriter writer = XmlWriter.Create(stream, settings);
         xmlSerializer.Serialize(writer, data, emptyNamespaces);
+    }
+
+    public static bool TryLoadFromXml(string inputFilePath, [MaybeNullWhen(false)] out SerializablePlaylist playlist)
+    {
+        using FileStream fs = new(inputFilePath, FileMode.Open, FileAccess.Read);
+        XmlSerializer xmlSerializer = new(typeof(SerializablePlaylist));
+        using XmlReader xr = XmlReader.Create(fs);
+        object? result = xmlSerializer.Deserialize(xr);
+        if (result is SerializablePlaylist p)
+        {
+            playlist = p;
+            return true;
+        }
+        else
+        {
+            playlist = null;
+            return false;
+        }
     }
 }
