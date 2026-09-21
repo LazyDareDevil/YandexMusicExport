@@ -18,6 +18,7 @@ internal static class ApiExtensions
         Stream content = await response.Content.ReadAsStreamAsync();
         using FileStream fs = new(filePath, FileMode.Truncate, FileAccess.Write);
         content.CopyTo(fs);
+        content.Position = 0;
         fs.Flush();
     }
 }

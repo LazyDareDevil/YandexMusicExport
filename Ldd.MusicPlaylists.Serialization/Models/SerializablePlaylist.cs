@@ -23,6 +23,8 @@ public class SerializablePlaylist
 
     public int TrackCount { get; set; }
 
+    public int TotalTracksCount { get; set; }
+
     [XmlArrayItem("Track")]
     public SerializableTrack[] Tracks { get; set; } = [];
 }

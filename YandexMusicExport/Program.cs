@@ -181,7 +181,7 @@ internal static class Program
     {
         try
         {
-            //string publicLink = YandexMusicApiService.GetPlaylistPublicLink(responseData.playlistUuid);
+            string publicLink = YandexMusicApiService.GetPlaylistPublicLink(responseData.playlistUuid);
             using StreamWriter textFile = new(outputFilePath);
             //string lineText = $"Playlist '{responseData.title}' | {publicLink}";
             string lineText = $"Playlist '{responseData.title}'";

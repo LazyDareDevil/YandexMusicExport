@@ -4,7 +4,7 @@
 [Serializable]
 public class Playlist
 {
-    //public string playlistUuid { get; set; } = string.Empty;
+    public string playlistUuid { get; set; } = string.Empty;
 
     public string title { get; set; } = string.Empty;
 
@@ -15,6 +15,8 @@ public class Playlist
     public int uid { get; set; }
 
     public int kind { get; set; }
+
+    public Pager? pager { get; set; }
 }
 
 #pragma warning restore IDE1006 // Naming Styles

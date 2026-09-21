@@ -73,7 +73,6 @@ public static class YMPlaylistApiService
                 return null;
             }
 
-            await response.SaveRawResponse(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "test.txt"));
             return await response.Content.ReadFromJsonAsync<PlaylistResponse>(options);
         }
 #if DEBUG

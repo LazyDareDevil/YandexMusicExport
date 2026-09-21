@@ -10,10 +10,11 @@ public static class ModelMappingService
         => new()
         {
             Title = playlist.title,
-            //PlaylistPublicLink = YandexMusicApiService.GetPlaylistPublicLink(playlist.playlistUuid),
+            PlaylistPublicLink = YandexMusicApiService.GetPlaylistPublicLink(playlist.playlistUuid),
             Uid = playlist.uid,
             Kind = playlist.kind,
             TrackCount = playlist.trackCount,
+            TotalTracksCount = playlist.pager?.total ?? 0,
             Tracks = [.. playlist.tracks.Select(t => t.track).Select( t => new SerializableTrack() {
                 Id = t.id,
                 Title = t.title,
