@@ -12,4 +12,12 @@ internal static class ApiExtensions
         content.Position = 0;
         return (encoding ?? Encoding.UTF8).GetString(data);
     }
+
+    internal static async Task SaveRawResponse(this HttpResponseMessage response, string filePath)
+    {
+        Stream content = await response.Content.ReadAsStreamAsync();
+        using FileStream fs = new(filePath, FileMode.Truncate, FileAccess.Write);
+        content.CopyTo(fs);
+        fs.Flush();
+    }
 }

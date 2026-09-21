@@ -1,6 +1,6 @@
 ﻿using Ldd.MusicPlaylists.Serialization.Models;
+using Ldd.YandexMusicApi;
 using Ldd.YandexMusicApi.Contracts;
-using Ldd.YandexMusicApi.Services;
 
 namespace YandexMusicExport;
 
@@ -10,7 +10,7 @@ public static class ModelMappingService
         => new()
         {
             Title = playlist.title,
-            PlaylistPublicLink = YMPublicApiLinkService.GetPlaylistPublicLink(playlist.playlistUuid),
+            //PlaylistPublicLink = YandexMusicApiService.GetPlaylistPublicLink(playlist.playlistUuid),
             Uid = playlist.uid,
             Kind = playlist.kind,
             TrackCount = playlist.trackCount,

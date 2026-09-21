@@ -1,4 +1,4 @@
-﻿namespace Ldd.MusicPlaylistsConverter;
+﻿namespace YandexMusicExport;
 
 public enum ExportType
 {

@@ -1,6 +1,5 @@
 ﻿using Ldd.MusicPlaylists.Serialization;
 using Ldd.MusicPlaylists.Serialization.Models;
-using Ldd.MusicPlaylistsConverter;
 using Ldd.YandexMusicApi;
 using Ldd.YandexMusicApi.Contracts;
 using Ldd.YandexMusicApi.Services;
@@ -85,6 +84,15 @@ internal static class Program
                 return;
             }
         }
+
+#if DEBUG
+        Console.WriteLine("Cookie?");
+        string? c = Console.ReadLine();
+        foreach ((string, string) cook in ParseCookie(c))
+        {
+            _yandexMusicExport.AddCookie(cook.Item1, cook.Item2);
+        }
+#endif
 
         Task<Playlist?> responseDataTask = _yandexMusicExport.GetPlaylist(userId, playlistId);
         responseDataTask.Wait();
@@ -173,9 +181,10 @@ internal static class Program
     {
         try
         {
-            string publicLink = YMPublicApiLinkService.GetPlaylistPublicLink(responseData.playlistUuid);
+            //string publicLink = YandexMusicApiService.GetPlaylistPublicLink(responseData.playlistUuid);
             using StreamWriter textFile = new(outputFilePath);
-            string lineText = $"Playlist '{responseData.title}' | {publicLink}";
+            //string lineText = $"Playlist '{responseData.title}' | {publicLink}";
+            string lineText = $"Playlist '{responseData.title}'";
             textFile.WriteLine(lineText);
             foreach (Track track in responseData.tracks.Select(t => t.track))
             {
@@ -190,6 +199,38 @@ internal static class Program
         catch
         {
             return false;
+        }
+    }
+
+    private static IEnumerable<(string, string)> ParseCookie(string? cookie)
+    {
+        if (string.IsNullOrEmpty(cookie))
+        {
+            yield break;
+        }
+
+        foreach (string split in cookie.Split(';', StringSplitOptions.RemoveEmptyEntries))
+        {
+            if (split.Length < 3) 
+            {
+                continue;
+            }
+
+            string d = split;
+            if (d.StartsWith(' '))
+            {
+                d = split.Remove(0, 1);
+            }
+
+            int f = d.IndexOf('=');
+            if (f < 0)
+            {
+                continue;
+            }
+
+            string key = d[..f];
+            string value = d[(f + 1)..^1];
+            yield return (key, value);
         }
     }
 

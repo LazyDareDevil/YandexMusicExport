@@ -12,7 +12,7 @@ public static class YMAlbumApiService
     {
         try
         {
-            client.BaseAddress ??= YMPathService.ApiBaseAddress;
+            client.BaseAddress ??= YandexMusicApiService.ApiBaseAddress;
             HttpResponseMessage response = await client.GetAsync($"albums/{albumId}/with-tracks");
             if (!response.IsSuccessStatusCode)
             {

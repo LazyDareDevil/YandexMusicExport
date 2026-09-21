@@ -9,12 +9,16 @@ namespace Ldd.YandexMusicApi;
 
 public sealed class YandexMusicApiService
 {
-    private readonly Uri _baseAddress = new("https://api.music.yandex.net");
+    public static readonly Uri ApiBaseAddress = new("https://music.yandex.ru");
+
     private readonly CookieContainer _cookieContainer = new();
     private readonly HttpClientHandler _httpClientHandler;
     private readonly JsonSerializerOptions? _options;
 
-    public void AddCookie(string name, string value) => _cookieContainer.Add(_baseAddress, new Cookie(name, value));
+    public static string GetPlaylistPublicLink(string playlistUuid)
+        => $"{ApiBaseAddress}/playlists/{playlistUuid}";
+
+    public void AddCookie(string name, string value) => _cookieContainer.Add(ApiBaseAddress, new Cookie(name, value));
 
     public YandexMusicApiService(JsonSerializerOptions? options = null)
     {
@@ -29,7 +33,7 @@ public sealed class YandexMusicApiService
         };
     }
 
-    public HttpClient GetApiClient() => new(_httpClientHandler) { BaseAddress = YMPathService.ApiBaseAddress };
+    public HttpClient GetApiClient() => new(_httpClientHandler) { BaseAddress = ApiBaseAddress };
 
     public HttpClient GetClient() => new(_httpClientHandler);
 

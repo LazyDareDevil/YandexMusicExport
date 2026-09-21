@@ -4,8 +4,6 @@ namespace Ldd.YandexMusicApi.Services;
 
 public static class YMPathService
 {
-    public static readonly Uri ApiBaseAddress = new("https://music.yandex.ru");
-
     // api playlist url style : https://api.music.yandex.net/users/user-id/playlists/playlist-id;
     //uriParts[0] == "https:";
     //uriParts[1] == "";

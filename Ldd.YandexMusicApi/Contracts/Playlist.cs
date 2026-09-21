@@ -4,7 +4,7 @@
 [Serializable]
 public class Playlist
 {
-    public string playlistUuid { get; set; } = string.Empty;
+    //public string playlistUuid { get; set; } = string.Empty;
 
     public string title { get; set; } = string.Empty;
 

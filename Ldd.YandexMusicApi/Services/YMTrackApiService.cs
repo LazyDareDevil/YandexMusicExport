@@ -12,7 +12,7 @@ public static class YMTrackApiService
     {
         try
         {
-            client.BaseAddress ??= YMPathService.ApiBaseAddress;
+            client.BaseAddress ??= YandexMusicApiService.ApiBaseAddress;
             HttpResponseMessage response = await client.GetAsync($"tracks/{trackId}/download-info");
             return await response.Content.ReadFromJsonAsync<TrackDownloadResponse>(options);
         }

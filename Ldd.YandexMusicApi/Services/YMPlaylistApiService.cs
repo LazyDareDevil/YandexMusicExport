@@ -66,13 +66,14 @@ public static class YMPlaylistApiService
     {
         try
         {
-            client.BaseAddress ??= YMPathService.ApiBaseAddress;
+            client.BaseAddress ??= YandexMusicApiService.ApiBaseAddress;
             HttpResponseMessage response = await client.GetAsync($"users/{userId}/playlists/{playlistId}");
             if (!response.IsSuccessStatusCode)
             {
                 return null;
             }
 
+            await response.SaveRawResponse(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "test.txt"));
             return await response.Content.ReadFromJsonAsync<PlaylistResponse>(options);
         }
 #if DEBUG
