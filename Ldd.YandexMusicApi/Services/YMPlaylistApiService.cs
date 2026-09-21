@@ -1,47 +1,17 @@
-﻿using System.Diagnostics;
+﻿using Ldd.YandexMusicApi.Responses;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using YandexMusicExport.YandexMusicApi.Responses;
 
-namespace YandexMusicExport.YandexMusicApi;
+namespace Ldd.YandexMusicApi.Services;
 
-public static class YMPlaylistPublicApiService
+public static class YMPlaylistApiService
 {
-    public static bool TryParsePlaylistApiData(this HttpClient client, string link, out int userId, out int playlistId)
-    {
-        // Разделение исходного URL-адреса по символу "/"
-        string[] uriParts = link.Split('/', '?');
-        bool correct = YMLinkParseService.TryParseApiStylePlaylistPath(uriParts, out userId, out playlistId);
-        if (!correct)
-        {
-            if (YMLinkParseService.TryParseWebAppStylePlaylistPath(uriParts, out string? playlistUuid))
-            {
-                return TryGetPlaylistApiDataFromWebAppData(client, link, playlistUuid, out userId, out playlistId);
-            }
-        }
-
-        return correct;
-    }
-
-    private static bool TryGetCoverPathLink(string coverUrl, [MaybeNullWhen(false)] out string link)
-    {
-        if (string.IsNullOrEmpty(coverUrl)
-            || coverUrl.Length < 4)
-        {
-            link = null;
-            return false;
-        }
-
-        string croppedUrl = coverUrl[..^2];
-        link = $"https://{croppedUrl}200x200";
-        return true;
-    }
-
     public static async Task<Stream?> GetCoverImageDataStrem(this HttpClient client, string coverUri)
     {
-        if (!TryGetCoverPathLink(coverUri, out string? link))
+        if (!YMPathService.TryGetCoverPathLink(coverUri, out string? link))
         {
             return null;
         }
@@ -57,7 +27,7 @@ public static class YMPlaylistPublicApiService
         }
     }
 
-    private static bool TryGetPlaylistApiDataFromWebAppData(this HttpClient client,
+    public static bool TryGetPlaylistApiDataFromWebAppData(this HttpClient client,
                                                            string playlistLink,
                                                            string playlistUuid,
                                                            [MaybeNullWhen(false)] out int userId,
@@ -89,15 +59,20 @@ public static class YMPlaylistPublicApiService
         return userFound && playlistFound;
     }
 
-    [SuppressMessage("Style", "IDE0059:Unnecessary assignment of a value", Justification = "<Pending>")]
-    public static async Task<PlaylistResponse?> TryGetPlaylistData(this HttpClient client, int userId, int playlistId, JsonSerializerOptions? options = null)
+    public static async Task<PlaylistResponse?> TryGetPlaylistData(this HttpClient client,
+                                                                   int userId,
+                                                                   int playlistId,
+                                                                   JsonSerializerOptions? options = null)
     {
-        // Формирование URL-адреса для запроса к серверу Яндекс Музыки
-        string uri = YMPublicApiLinkService.GetPlaylistDataRequestLink(userId, playlistId);
         try
         {
-            // Отправка запроса по URL-адресу и получение ответа в формате JSON
-            HttpResponseMessage response = client.Send(new HttpRequestMessage(HttpMethod.Get, uri));
+            client.BaseAddress ??= YMPathService.ApiBaseAddress;
+            HttpResponseMessage response = await client.GetAsync($"users/{userId}/playlists/{playlistId}");
+            if (!response.IsSuccessStatusCode)
+            {
+                return null;
+            }
+
             return await response.Content.ReadFromJsonAsync<PlaylistResponse>(options);
         }
 #if DEBUG

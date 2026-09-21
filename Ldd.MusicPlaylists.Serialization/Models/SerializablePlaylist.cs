@@ -16,9 +16,12 @@ public class SerializablePlaylist
     [XmlAttribute]
     public int Kind { get; set; }
 
+    [XmlAttribute]
+    public int UserId { get; set; }
+
     public string Title { get; set; } = string.Empty;
 
-    public int TrackCount { get; set; } = 0;
+    public int TrackCount { get; set; }
 
     [XmlArrayItem("Track")]
     public SerializableTrack[] Tracks { get; set; } = [];

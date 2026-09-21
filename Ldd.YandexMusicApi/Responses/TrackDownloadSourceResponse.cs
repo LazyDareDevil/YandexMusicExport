@@ -1,6 +1,6 @@
 ﻿using System.Xml.Serialization;
 
-namespace YandexMusicExport.YandexMusicApi.Responses;
+namespace Ldd.YandexMusicApi.Responses;
 
 [XmlRoot("download-info")]
 public class TrackDownloadSourceResponse

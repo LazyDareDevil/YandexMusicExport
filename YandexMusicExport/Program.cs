@@ -1,13 +1,14 @@
 ﻿using Ldd.MusicPlaylists.Serialization;
 using Ldd.MusicPlaylists.Serialization.Models;
 using Ldd.MusicPlaylistsConverter;
+using Ldd.YandexMusicApi;
+using Ldd.YandexMusicApi.Contracts;
+using Ldd.YandexMusicApi.Services;
 using System.Diagnostics;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
-using YandexMusicExport.YandexMusicApi;
-using YandexMusicExport.YandexMusicApi.Contracts;
-using YandexMusicExport.YandexMusicApi.Responses;
+using YandexMusicExport;
 
 internal static class Program
 {
@@ -17,13 +18,11 @@ internal static class Program
         WriteIndented = true,
         Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
     };
+    private static readonly YandexMusicApiService _yandexMusicExport = new(_jsonOptions);
 
     private static void Main(string[] args)
     {
         string directory = AppContext.BaseDirectory;
-
-        //YMAuthorization.TryGetAuthToken(SupportedBrowser.Chrome, out var authToken);
-
         Console.ForegroundColor = ConsoleColor.White;
         Console.BackgroundColor = ConsoleColor.DarkMagenta;
         Console.Write("=== Экспорт Яндекс Музыки ===");
@@ -74,18 +73,20 @@ internal static class Program
         Console.WriteLine("Обработка...\n");
         Console.ResetColor();
 
-
-        HttpClient client = new();
-        if (!client.TryParsePlaylistApiData(uriRaw, out int userId, out int playlistId))
+        if (!YMPathService.TryParseApiStylePlaylistPath(uriRaw, out int userId, out int playlistId))
         {
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine("Ошибка! Вероятно, некорректная ссылка. Проверьте, чтобы она была вида " +
-                              "https://music.yandex.ru/users/USERNAME/playlists/PLAYLIST_ID или https://music.yandex.ru/playlists/PLAYLIST_UUID. Попробуйте еще раз. Если ничего не работает, напишите мне https://t.me/aleqsanbr.");
-            Console.ResetColor();
-            return;
+            if (!YMPathService.TryParseWebAppStylePlaylistPath(uriRaw, out string? playlistUuid)
+                || !_yandexMusicExport.GetClient().TryGetPlaylistApiDataFromWebAppData(uriRaw, playlistUuid, out userId, out playlistId))
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("Ошибка! Вероятно, некорректная ссылка. Проверьте, чтобы она была вида " +
+                                  "https://music.yandex.ru/users/USERNAME/playlists/PLAYLIST_ID или https://music.yandex.ru/playlists/PLAYLIST_UUID. Попробуйте еще раз. Если ничего не работает, напишите мне https://t.me/aleqsanbr.");
+                Console.ResetColor();
+                return;
+            }
         }
 
-        Task<PlaylistResponse?> responseDataTask = client.TryGetPlaylistData(userId, playlistId, _jsonOptions);
+        Task<Playlist?> responseDataTask = _yandexMusicExport.GetPlaylist(userId, playlistId);
         responseDataTask.Wait();
         if (responseDataTask.Result is null)
         {
@@ -99,32 +100,32 @@ internal static class Program
             return;
         }
 
-        PlaylistResponse? responseData = responseDataTask.Result;
+        Playlist? responseData = responseDataTask.Result;
         string outputFilePath;
         bool serialized;
         SerializablePlaylist? playlist;
         Console.ForegroundColor = ConsoleColor.Green;
-        Console.WriteLine($"Начата обработка плейлиста '{responseData.result.title}'");
+        Console.WriteLine($"Начата обработка плейлиста '{responseData.title}'");
         Console.ResetColor();
         switch (export)
         {
             case ExportType.Json:
                 {
-                    playlist = ModelMappingService.CreateSerilzableProject(responseData.result);
-                    outputFilePath = GetJsonFilePath(directory, responseData.result.title);
+                    playlist = ModelMappingService.CreateSerilzableProject(responseData);
+                    outputFilePath = GetJsonFilePath(directory, responseData.title);
                     serialized = JsonSerialization.TryJsonFileExport(outputFilePath, playlist, _jsonOptions);
                     break;
                 }
             case ExportType.Xml:
                 {
-                    playlist = ModelMappingService.CreateSerilzableProject(responseData.result);
-                    outputFilePath = GetXmlFilePath(directory, responseData.result.title);
+                    playlist = ModelMappingService.CreateSerilzableProject(responseData);
+                    outputFilePath = GetXmlFilePath(directory, responseData.title);
                     serialized = XmlSerialization.TryXmlFileExport(outputFilePath, playlist, _dataEncoding);
                     break;
                 }
             default:
                 {
-                    outputFilePath = GetSimpleFilePath(directory, responseData.result.title);
+                    outputFilePath = GetSimpleFilePath(directory, responseData.title);
                     serialized = TrySerializeSimpleText(outputFilePath, responseData);
                     break;
                 }
@@ -147,7 +148,7 @@ internal static class Program
         }
 
         Console.ForegroundColor = ConsoleColor.Green;
-        Console.WriteLine($"Закончена обработка плейлиста '{responseData.result.title}'");
+        Console.WriteLine($"Закончена обработка плейлиста '{responseData.title}'");
         Console.ResetColor();
         Console.WriteLine($"Список треков сохранен рядом с файлом программы (файл {outputFilePath}).\n");
         if (File.Exists(outputFilePath))
@@ -168,15 +169,15 @@ internal static class Program
 
     private static string GetJsonFilePath(string directory, string playlistName) => Path.Combine(directory, $"{playlistName}_{DateTime.Now:yyyy-MM-dd}.json");
 
-    public static bool TrySerializeSimpleText(string outputFilePath, PlaylistResponse responseData)
+    public static bool TrySerializeSimpleText(string outputFilePath, Playlist responseData)
     {
         try
         {
-            string publicLink = YMPublicApiLinkService.GetPlaylistPublicLink(responseData.result.playlistUuid);
+            string publicLink = YMPublicApiLinkService.GetPlaylistPublicLink(responseData.playlistUuid);
             using StreamWriter textFile = new(outputFilePath);
-            string lineText = $"Playlist '{responseData.result.title}' | {publicLink}";
+            string lineText = $"Playlist '{responseData.title}' | {publicLink}";
             textFile.WriteLine(lineText);
-            foreach (Track track in responseData.result.tracks.Select(t => t.track))
+            foreach (Track track in responseData.tracks.Select(t => t.track))
             {
                 lineText = string.Format("{0} - {1}", string.Join(", ", track.artists.Select(a => a.name)).TrimEnd(',', ' '), track.title);
                 textFile.WriteLine(lineText);
@@ -192,7 +193,7 @@ internal static class Program
         }
     }
 
-    public static async Task LoadCovers(HttpClient client, string directory, SerializablePlaylist serializablePlaylist)
+    private static async Task LoadCovers(HttpClient client, string directory, SerializablePlaylist serializablePlaylist)
     {
         string dirPath = Path.Combine(directory, $"{serializablePlaylist.Title}-Covers");
         if (!Directory.Exists(dirPath))
@@ -213,7 +214,7 @@ internal static class Program
                 continue;
             }
 
-            string coverFilePath = Path.Combine(dirPath, $"{string.Join('_', track.Artists)}-{track.Title}.jpg");
+            string coverFilePath = Path.Combine(dirPath, $"{string.Join('_', track.Artists.Select(e => e.Name))}-{track.Title}.jpg");
             try
             {
                 using FileStream fs = new(coverFilePath, FileMode.CreateNew, FileAccess.Write);

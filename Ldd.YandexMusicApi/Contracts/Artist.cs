@@ -1,4 +1,4 @@
-﻿namespace YandexMusicExport.YandexMusicApi.Contracts;
+﻿namespace Ldd.YandexMusicApi.Contracts;
 
 #pragma warning disable IDE1006 // Naming Styles
 

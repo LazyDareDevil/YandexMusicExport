@@ -6,6 +6,9 @@ namespace Ldd.MusicPlaylists.Serialization.Models;
 [XmlRoot("Track")]
 public class SerializableTrack
 {
+    [XmlAttribute]
+    public string Id { get; set; } = string.Empty;
+
     public string Title { get; set; } = string.Empty;
 
     [XmlIgnore]
@@ -17,7 +20,7 @@ public class SerializableTrack
     public string CoverFilePath { get; set; } = string.Empty;
 
     [XmlArrayItem("Artist")]
-    public string[] Artists { get; set; } = [];
+    public SerializableArtist[] Artists { get; set; } = [];
 
     [XmlArrayItem("Album")]
     public SerializableAlbum[] Albums { get; set; } = [];

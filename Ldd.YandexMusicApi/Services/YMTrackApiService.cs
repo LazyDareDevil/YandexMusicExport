@@ -1,32 +1,24 @@
-﻿using System.Net.Http.Json;
+﻿using Ldd.YandexMusicApi.Contracts;
+using Ldd.YandexMusicApi.Responses;
+using System.Net.Http.Json;
 using System.Text.Json;
 using System.Xml.Serialization;
-using YandexMusicExport.YandexMusicApi.Contracts;
-using YandexMusicExport.YandexMusicApi.Responses;
 
-namespace YandexMusicExport.YandexMusicApi;
+namespace Ldd.YandexMusicApi.Services;
 
-public static class YMTrackDownloadPublicApiService
+public static class YMTrackApiService
 {
-    public static async Task<TrackDownloadInfo[]> TryGetTrackDownloadInfoData(this HttpClient client, int trackId, JsonSerializerOptions? options = null)
+    public static async Task<TrackDownloadResponse?> GetTrackDownloadData(this HttpClient client, int trackId, JsonSerializerOptions? options = null)
     {
         try
         {
-            // Формирование URL-адреса для запроса к серверу Яндекс Музыки
-            string uri = YMPublicApiLinkService.GetTrackDownloadInfoLink(trackId);
-            // Отправка запроса по URL-адресу и получение ответа в формате JSON
-            HttpResponseMessage response = client.Send(new HttpRequestMessage(HttpMethod.Get, uri));
-            TrackDownloadResponse? downloadResponse = await response.Content.ReadFromJsonAsync<TrackDownloadResponse>(options);
-            if (downloadResponse is null)
-            {
-                return [];
-            }
-
-            return downloadResponse.trackDownloadTypes;
+            client.BaseAddress ??= YMPathService.ApiBaseAddress;
+            HttpResponseMessage response = await client.GetAsync($"tracks/{trackId}/download-info");
+            return await response.Content.ReadFromJsonAsync<TrackDownloadResponse>(options);
         }
         catch
         {
-            return [];
+            return null;
         }
     }
 
@@ -34,6 +26,7 @@ public static class YMTrackDownloadPublicApiService
     {
         try
         {
+            client.BaseAddress = null;
             string uri = $"https://{downloadInfo.downloadInfoUrl}";
             HttpResponseMessage response = client.Send(new HttpRequestMessage(HttpMethod.Get, uri));
             Stream responseData = await response.Content.ReadAsStreamAsync();
@@ -57,7 +50,8 @@ public static class YMTrackDownloadPublicApiService
         // TODO: auth required
         try
         {
-            string uri = GetDownloadDataLink(downloadSource);
+            client.BaseAddress = null;
+            string uri = $"https://{downloadSource.Host}{downloadSource.Path}";
             HttpResponseMessage response = client.Send(new HttpRequestMessage(HttpMethod.Get, uri));
             return await response.Content.ReadAsStreamAsync();
         }
@@ -66,7 +60,4 @@ public static class YMTrackDownloadPublicApiService
             return null;
         }
     }
-
-    private static string GetDownloadDataLink(TrackDownloadSourceResponse trackDownloadSource)
-        => $"https://{trackDownloadSource.Host}{trackDownloadSource.Path}";
 }
